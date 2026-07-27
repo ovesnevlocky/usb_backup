@@ -9,6 +9,8 @@
 #include <string.h>
 #include <stdbool.h>
 
+bool isNull(void *a);
+
 
 void concat(char *dst, char *dir_to);
 
@@ -25,6 +27,7 @@ bool isCurrDir(char *d_name)
 
 void openDir(char *cwd, char *dir_to)
 {
+
 	concat(cwd, dir_to);
 	DIR *dirp = opendir(cwd);
         struct dirent *dp; 
@@ -47,7 +50,7 @@ void openDir(char *cwd, char *dir_to)
 				continue;	
 			}
 
-			fprintf(stderr, "open dir: %s\n", dp->d_name);
+			fprintf(stderr, "-----open dir: %s -----\n", dp->d_name);
 			openDir (cwd, dp->d_name);
 		}
 		else if(dp ->d_type == DT_REG)
@@ -56,10 +59,15 @@ void openDir(char *cwd, char *dir_to)
 		}
 	}while(dirp);
 	//plus one for '/' char
+	fprintf(stderr, "-----close dir: %s -----\n\n", strcmp(dir_to, " ") == 0 ? "try_dir" : dir_to);
 	closedir(dirp);	
-	size_t lenDirTo = dir_to == NULL ? 0 :  strlen(dir_to);
-	printf("len cwd: %lu, len dir_to: %lu, %s\n", strlen(cwd), lenDirTo, dir_to);
-	cwd[strlen(cwd) - ( lenDirTo + 1 ) ] = '\0';
+	size_t lenDirTo = isNull(dir_to) ? 0 : strlen(dir_to);
+	
+	//size_t offset = strlen(cwd) - (lenDirTo + 1);
+	size_t offset = lenDirTo + 1;
+	size_t start = strlen(cwd) - offset;
+	//change back to the string before concating//
+	memset(cwd + start , 0,  offset);
 	return;
 }
 
@@ -104,6 +112,6 @@ int main()
 	char cwd[PATH_MAX] = {0};
 	getcwd(cwd, sizeof(cwd));
 	char *first = " ";	
-	openDir(cwd, first);
+	openDir(cwd, " " );
 	
 }

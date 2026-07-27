@@ -1,6 +1,0 @@
-len cwd: 30, len dir_to: 3, bin
-len cwd: 32, len dir_to: 5, test3
-len cwd: 32, len dir_to: 5, build
-len cwd: 32, len dir_to: 5, test2
-len cwd: 32, len dir_to: 5, test1
-len cwd: 26, len dir_to: 1,  
