@@ -63,10 +63,28 @@ void openDir(char *cwd, char *dir_to)
 	return;
 }
 
+bool isNull(void *a)
+{
+	return a == NULL;
+}
+
 void concat(char *dst, char *dir_to)
 {
-	if(dir_to == NULL)
+	if(isNull(dst))
+	{
+		fprintf(stderr, "dst points to null\n");
 		return;
+	}
+
+	if(isNull(dir_to))
+	{
+		fprintf(stderr, "dir_to points to null\n");
+		return;
+	}
+
+	//the first case
+	if(strcmp(dir_to, " ") == 0)
+			return;
 
 	int i = 0;
 	int dstIdx = strlen(dst);
@@ -85,7 +103,7 @@ int main()
 {
 	char cwd[PATH_MAX] = {0};
 	getcwd(cwd, sizeof(cwd));
-		
-	openDir(cwd, NULL);
+	char *first = " ";	
+	openDir(cwd, first);
 	
 }

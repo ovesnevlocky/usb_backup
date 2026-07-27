@@ -27,3 +27,6 @@ clean:
 		
 gdb:
 	gdb -iex "set debuginfod enabled off" ./$(BIN)
+
+valg: 
+	valgrind ./$(BIN)
