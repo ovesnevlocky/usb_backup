@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <dirent.h>
 #include <stdlib.h>
@@ -49,3 +48,44 @@ void openDir(char *cwd, char *dir_to)
 			}
 
 			fprintf(stderr, "open dir: %s\n", dp->d_name);
+			openDir (cwd, dp->d_name);
+		}
+		else if(dp ->d_type == DT_REG)
+		{
+			fprintf(stderr, "file: %s\n", dp->d_name);
+		}
+	}while(dirp);
+	//plus one for '/' char
+	closedir(dirp);	
+	size_t lenDirTo = dir_to == NULL ? 0 :  strlen(dir_to);
+	printf("len cwd: %lu, len dir_to: %lu, %s\n", strlen(cwd), lenDirTo, dir_to);
+	cwd[strlen(cwd) - ( lenDirTo + 1 ) ] = '\0';
+	return;
+}
+
+void concat(char *dst, char *dir_to)
+{
+	if(dir_to == NULL)
+		return;
+
+	int i = 0;
+	int dstIdx = strlen(dst);
+	dst[dstIdx++] = '/';
+
+	for(; dir_to[i] != '\0'; i++)
+	{
+		dst[dstIdx++] = dir_to[i];
+	}
+	dst[dstIdx] = '\0';
+	
+	return;
+}
+
+int main()
+{
+	char cwd[PATH_MAX] = {0};
+	getcwd(cwd, sizeof(cwd));
+		
+	openDir(cwd, NULL);
+	
+}

@@ -1,15 +1,6 @@
-file: Makefile
-open dir: bin
-file: result.txt
-file: main
-open dir: test3
-file: pangram.txt
-open dir: build
-file: dirs.o
-file: dirs.d
-open dir: test2
-file: kafka.txt
-file: .dirs.c.swp
-file: dirs.c
-open dir: test1
-file: text.txt
+len cwd: 30, len dir_to: 3, bin
+len cwd: 32, len dir_to: 5, test3
+len cwd: 32, len dir_to: 5, build
+len cwd: 32, len dir_to: 5, test2
+len cwd: 32, len dir_to: 5, test1
+len cwd: 26, len dir_to: 0, (null)
