@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <dirent.h>
 #include <stdlib.h>
@@ -10,6 +11,7 @@
 #include <stdbool.h>
 
 
+void concat(char *dst, char *dir_to);
 
 bool isParentDir(char *d_name)
 {
@@ -22,11 +24,13 @@ bool isCurrDir(char *d_name)
 }	
 
 
-void openDir(DIR *dirp, struct dirent *dp)
+void openDir(char *cwd, char *dir_to)
 {
-	bool isParentDirSeen = false;
-	DIR *dir; 
-	while(dirp)
+	concat(cwd, dir_to);
+	DIR *dirp = opendir(cwd);
+        struct dirent *dp; 
+	
+	do	
 	{
 		errno = 0;
 		dp = readdir(dirp);
@@ -39,42 +43,9 @@ void openDir(DIR *dirp, struct dirent *dp)
 	
 		if(dp ->d_type == DT_DIR)
 		{	
-			if(isParentDir(dp->d_name))
+			if(isParentDir(dp->d_name) || isCurrDir(dp->d_name))
 			{
-				if(!isParentDirSeen)
-				{
-					isParentDirSeen = true;
-					continue;
-				}
-
-			}
-			if(isCurrDir(dp->d_name))
 				continue;	
-			printf("open dir: %s\n", dp->d_name);
-			dir = opendir(dp->d_name);
-			openDir (dir, dp);
-		}
-		else if(dp ->d_type == DT_REG)
-		{
-			printf("file: %s\n", dp->d_name);
-			
-		}
-	}	
-	return;
-}
+			}
 
-
-
-int main()
-{
-	char cwd[PATH_MAX];
-	getcwd(cwd, sizeof(cwd));
-	
-	DIR *dirp = opendir(cwd);
-	struct dirent *dp;
-	openDir(dirp, dp);
-	
-	closedir(dirp);
-	
-
-}
+			fprintf(stderr, "open dir: %s\n", dp->d_name);
