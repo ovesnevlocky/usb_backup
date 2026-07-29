@@ -1,14 +1,129 @@
 /home/kazuy/ws/usb/try_dir
-ID of containing device:  [8,30]
-File type:                directory
-I-node number:            1851
-Mode:                     40755 (octal)
-Link count:               7
-Ownership:                UID=1000   GID=1000
-Preferred I/O block size: 4096 bytes
-File size:                4096 bytes
-Blocks allocated:         8
-Last status change:       Wed Jul 29 16:26:27 2026
-Last file access:         Wed Jul 29 16:26:31 2026
-Last file modification:   Wed Jul 29 16:26:27 2026
-Dir: 6, file: 13
+/home/kazuy was modified within a week
+/home/kazuy was modified within a week
+/home/kazuy was modified within a week
+/home/kazuy/python/ws was modified within a week
+/home/kazuy/python/ws/genG.py was modified within a week
+/home/kazuy/python/ws was modified within a week
+/home/kazuy/python/ws was modified within a week
+/home/kazuy was modified within a week
+/home/kazuy was modified within a week
+/home/kazuy was modified within a week
+/home/kazuy was modified within a week
+/home/kazuy was modified within a week
+/home/kazuy/.bashrc was modified within a week
+/home/kazuy was modified within a week
+/home/kazuy was modified within a week
+/home/kazuy/ws was modified within a week
+/home/kazuy/ws/algs26 was modified within a week
+/home/kazuy/ws/algs26/shuntingYard/Makefile was modified within a week
+/home/kazuy/ws/algs26/shuntingYard was modified within a week
+/home/kazuy/ws/algs26/graph.txt was modified within a week
+/home/kazuy/ws/algs26 was modified within a week
+/home/kazuy/ws/algs26/graph/Makefile was modified within a week
+/home/kazuy/ws/algs26/graph was modified within a week
+/home/kazuy/ws/algs26/graph/bin/result.txt was modified within a week
+/home/kazuy/ws/algs26/graph/bin/main was modified within a week
+/home/kazuy/ws/algs26/graph was modified within a week
+/home/kazuy/ws/algs26/graph/graphs/gsmall.txt was modified within a week
+/home/kazuy/ws/algs26/graph/graphs/cyc.txt was modified within a week
+/home/kazuy/ws/algs26/graph/graphs/star.txt was modified within a week
+/home/kazuy/ws/algs26/graph/graphs/genG was modified within a week
+/home/kazuy/ws/algs26/graph/graphs/g.txt was modified within a week
+/home/kazuy/ws/algs26/graph/graphs/500.txt was modified within a week
+/home/kazuy/ws/algs26/graph/graphs/gP.txt was modified within a week
+/home/kazuy/ws/algs26/graph/graphs was modified within a week
+/home/kazuy/ws/algs26/graph/graphs/vis/star.pdf was modified within a week
+/home/kazuy/ws/algs26/graph/graphs/vis/small.pdf was modified within a week
+/home/kazuy/ws/algs26/graph/graphs/vis/med.pdf was modified within a week
+/home/kazuy/ws/algs26/graph/graphs/vis/cyc.pdf was modified within a week
+/home/kazuy/ws/algs26/graph/graphs/vis/big.pdf was modified within a week
+/home/kazuy/ws/algs26/graph/graphs/vis/hard.pdf was modified within a week
+/home/kazuy/ws/algs26/graph/graphs/vis/gP.pdf was modified within a week
+/home/kazuy/ws/algs26/graph/graphs/big.txt was modified within a week
+/home/kazuy/ws/algs26/graph/graphs/g was modified within a week
+/home/kazuy/ws/algs26/graph/graphs/gMed.txt was modified within a week
+/home/kazuy/ws/algs26/graph was modified within a week
+/home/kazuy/ws/algs26/graph/bfs/queue.h was modified within a week
+/home/kazuy/ws/algs26/graph/bfs/bfs.c was modified within a week
+/home/kazuy/ws/algs26/graph/bfs/queue.c was modified within a week
+/home/kazuy/ws/algs26/graph/bfs/node.h was modified within a week
+/home/kazuy/ws/algs26/graph/bfs/bfs.h was modified within a week
+/home/kazuy/ws/algs26/graph/radix.h was modified within a week
+/home/kazuy/ws/algs26/graph/main.c was modified within a week
+/home/kazuy/ws/algs26/graph/graph.c was modified within a week
+/home/kazuy/ws/algs26/graph/radix.c was modified within a week
+/home/kazuy/ws/algs26/graph/graph.h was modified within a week
+/home/kazuy/ws/algs26/graph/defines.h was modified within a week
+/home/kazuy/ws/algs26/graph was modified within a week
+/home/kazuy/ws/algs26/graph/dfs/stack.c was modified within a week
+/home/kazuy/ws/algs26/graph/dfs/dfs.h was modified within a week
+/home/kazuy/ws/algs26/graph/dfs/dfs.c was modified within a week
+/home/kazuy/ws/algs26/graph/dfs/node.h was modified within a week
+/home/kazuy/ws/algs26/graph/dfs/stack.h was modified within a week
+/home/kazuy/ws/algs26/graph/vis.pdf was modified within a week
+/home/kazuy/ws/algs26/graph/.~lock.vis.pdf# was modified within a week
+/home/kazuy/ws/algs26/graph/g was modified within a week
+/home/kazuy/ws/algs26/graph/csr_t.h was modified within a week
+/home/kazuy/ws/algs26/.gitignore was modified within a week
+/home/kazuy/ws/algs26 was modified within a week
+/home/kazuy/ws was modified within a week
+/home/kazuy/ws was modified within a week
+/home/kazuy/ws was modified within a week
+/home/kazuy/ws was modified within a week
+/home/kazuy/ws was modified within a week
+/home/kazuy/ws was modified within a week
+/home/kazuy/ws was modified within a week
+/home/kazuy/ws was modified within a week
+/home/kazuy/ws/usb was modified within a week
+/home/kazuy/ws/usb/try_dir/Makefile was modified within a week
+/home/kazuy/ws/usb/try_dir was modified within a week
+/home/kazuy/ws/usb/try_dir/bin/result.txt was modified within a week
+/home/kazuy/ws/usb/try_dir/bin/main was modified within a week
+/home/kazuy/ws/usb/try_dir was modified within a week
+/home/kazuy/ws/usb/try_dir/test3/pangram.txt was modified within a week
+/home/kazuy/ws/usb/try_dir was modified within a week
+/home/kazuy/ws/usb/try_dir/build/dirs.o was modified within a week
+/home/kazuy/ws/usb/try_dir/build/dirs.d was modified within a week
+/home/kazuy/ws/usb/try_dir was modified within a week
+/home/kazuy/ws/usb/try_dir/test2/kafka.txt was modified within a week
+/home/kazuy/ws/usb/try_dir/.dirs.c.swp was modified within a week
+/home/kazuy/ws/usb/try_dir/dirs.c was modified within a week
+/home/kazuy/ws/usb/try_dir/a was modified within a week
+/home/kazuy/ws/usb/try_dir was modified within a week
+/home/kazuy/ws/usb/try_dir/test1/text.txt was modified within a week
+/home/kazuy/ws/usb/try_dir/test1 was modified within a week
+/home/kazuy/ws/usb/try_dir/test1/test4/u.txt was modified within a week
+/home/kazuy/ws/usb/try_dir/rel.txt was modified within a week
+/home/kazuy/ws/usb/a.txt was modified within a week
+/home/kazuy/ws/usb/.gitignore was modified within a week
+/home/kazuy/ws was modified within a week
+/home/kazuy/ws/HW07/main was modified within a week
+/home/kazuy/ws was modified within a week
+/home/kazuy/ws was modified within a week
+/home/kazuy/ws was modified within a week
+/home/kazuy/ws was modified within a week
+/home/kazuy/ws was modified within a week
+/home/kazuy was modified within a week
+/home/kazuy was modified within a week
+/home/kazuy/.lesshst was modified within a week
+/home/kazuy was modified within a week
+/home/kazuy was modified within a week
+/home/kazuy was modified within a week
+/home/kazuy was modified within a week
+/home/kazuy was modified within a week
+/home/kazuy/snap/intellij-idea was modified within a week
+/home/kazuy/snap/intellij-idea was modified within a week
+/home/kazuy/snap/intellij-idea was modified within a week
+/home/kazuy was modified within a week
+/home/kazuy was modified within a week
+/home/kazuy was modified within a week
+/home/kazuy/.bash_history was modified within a week
+/home/kazuy was modified within a week
+/home/kazuy/.viminfo was modified within a week
+/home/kazuy was modified within a week
+/home/kazuy/.vimrc was modified within a week
+/home/kazuy/.motd_shown was modified within a week
+/home/kazuy was modified within a week
+Dir: 2341, file: 13734
+604800

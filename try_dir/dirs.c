@@ -15,6 +15,8 @@
 
 #include <stdint.h>
 
+#define ONEWEEK 7*24*60*60
+
 bool isNull(void *a);
 
 
@@ -22,6 +24,7 @@ void concat(char *dst, char *dir_to);
 
 void cleanDirTo(char *dst, char *path);
 
+bool getStat(char *path);
 	
 void cleanDirTo(char *cwd, char *dir_to)
 {
@@ -34,15 +37,21 @@ void cleanDirTo(char *cwd, char *dir_to)
 	memset(cwd + start , 0,  offset);
 
 }
-bool isParentDir(char *d_name)
+static inline bool isParentDir(char *d_name)
 {
 	return strcmp(d_name, "..") == 0;
 }	
 
-bool isCurrDir(char *d_name)
+static inline bool isCurrDir(char *d_name)
 {
 	return strcmp(d_name, ".") == 0;
 }	
+
+static inline bool isHidden(char *d_name)
+{
+	return d_name[0] == '.';
+
+}
 
 size_t numDir = 0;
 size_t numFile = 0;
@@ -73,17 +82,23 @@ void openDir(char *cwd, char *dir_to)
 	
 		if(dp ->d_type == DT_DIR)
 		{	
-			if(isParentDir(dp->d_name) || isCurrDir(dp->d_name))
+			if(isParentDir(dp->d_name) || isCurrDir(dp->d_name) || isHidden(dp->d_name))
 			{
 				continue;	
 			}
 
 			//fprintf(stdout, "-----open dir: %s -----\n", dp->d_name);
 			numDir++;	
+			if(getStat(cwd))
+				printf("%s was modified within a week\n", cwd);
 			openDir (cwd, dp->d_name);
 		}
 		else if(dp ->d_type == DT_REG)
 		{
+			concat(cwd, dp->d_name);
+			if(getStat(cwd))
+				printf("%s was modified within a week\n", cwd);
+			cleanDirTo(cwd, dp->d_name);
 			numFile++;
 			//fprintf(stdout, "file: %s\n", dp->d_name);
 		}
@@ -141,16 +156,29 @@ void setHome(char *cwd)
 	cwd[i] = '\0';
 }
 
-void getStat(char *path)
+
+bool isModifiedWithinWeek(unsigned long lastModified)
+{
+	time_t now;
+	now = time(NULL);
+	
+	return lastModified + ONEWEEK  >= now;
+
+}
+
+
+bool getStat(char *path)
 {
 	struct stat sb;
 	
     	if (lstat(path, &sb) == -1)	
        	{
+		printf("%s: ", path);
         	perror("lstat");
-        	return;
+        	return false;
     	}
 
+	/*
 	printf("ID of containing device:  [%x,%x]\n",
                major(sb.st_dev),
                minor(sb.st_dev));
@@ -189,7 +217,11 @@ void getStat(char *path)
          printf("Last file access:         %s", ctime(&sb.st_atime));
          printf("Last file modification:   %s", ctime(&sb.st_mtime));
 
+	 
+         printf("Last file modification:   %lu\n", sb.st_mtime);
+	 */
 
+	 return isModifiedWithinWeek(sb.st_mtime);
 
 }
 
@@ -199,11 +231,14 @@ int main()
 	char cwd[PATH_MAX] = {0};
 	getcwd(cwd, sizeof(cwd));
 	puts(cwd);	
+
+	setHome(cwd);	
 	getStat(cwd);
-
-//	setHome(cwd);	
-
+	
 	openDir(cwd, " " );
 	printf("Dir: %lu, file: %lu\n", numDir, numFile);
 	
+
+
+	printf("%u\n", ONEWEEK);
 }
