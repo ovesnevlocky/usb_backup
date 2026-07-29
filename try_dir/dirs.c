@@ -29,6 +29,7 @@ void openDir(char *cwd, char *dir_to)
 {
 
 	concat(cwd, dir_to);
+	//fprintf(stderr, "%s\n", cwd);
 	DIR *dirp = opendir(cwd);
         struct dirent *dp; 
 	
@@ -50,20 +51,21 @@ void openDir(char *cwd, char *dir_to)
 				continue;	
 			}
 
-			fprintf(stderr, "-----open dir: %s -----\n", dp->d_name);
+			fprintf(stdout, "-----open dir: %s -----\n", dp->d_name);
+			
 			openDir (cwd, dp->d_name);
 		}
 		else if(dp ->d_type == DT_REG)
 		{
-			fprintf(stderr, "file: %s\n", dp->d_name);
+			fprintf(stdout, "file: %s\n", dp->d_name);
 		}
 	}while(dirp);
 	//plus one for '/' char
-	fprintf(stderr, "-----close dir: %s -----\n\n", strcmp(dir_to, " ") == 0 ? "try_dir" : dir_to);
+	fprintf(stdout, "-----close dir: %s -----\n\n", strcmp(dir_to, " ") == 0 ? "try_dir" : dir_to);
+
 	closedir(dirp);	
 	size_t lenDirTo = isNull(dir_to) ? 0 : strlen(dir_to);
 	
-	//size_t offset = strlen(cwd) - (lenDirTo + 1);
 	size_t offset = lenDirTo + 1;
 	size_t start = strlen(cwd) - offset;
 	//change back to the string before concating//
@@ -110,8 +112,15 @@ void concat(char *dst, char *dir_to)
 int main()
 {
 	char cwd[PATH_MAX] = {0};
-	getcwd(cwd, sizeof(cwd));
-	char *first = " ";	
+	//getcwd(cwd, sizeof(cwd));
+	char *path = "/home/kazuy";
+	int i = 0;
+	for(; path[i] != '\0'; i++)
+		cwd[i] = path[i];
+
+
+	cwd[i] = '\0';
+	puts(cwd);
 	openDir(cwd, " " );
 	
 }
