@@ -25,7 +25,14 @@ void concat(char *dst, char *dir_to);
 void cleanDirTo(char *dst, char *path);
 
 bool getStat(char *path);
-	
+
+char *cpyPath(char *path)
+{
+	char *ret = malloc(sizeof(char) * (strlen(path) + 1));
+	memcpy(ret, path, strlen(path) + 1);
+
+	return ret;	
+}
 void cleanDirTo(char *cwd, char *dir_to)
 {
 
@@ -55,7 +62,9 @@ static inline bool isHidden(char *d_name)
 
 size_t numDir = 0;
 size_t numFile = 0;
-void openDir(char *cwd, char *dir_to)
+
+
+void openDir(char *cwd, char *dir_to, char **list, int *count)
 {
 
 	concat(cwd, dir_to);
@@ -89,15 +98,17 @@ void openDir(char *cwd, char *dir_to)
 
 			//fprintf(stdout, "-----open dir: %s -----\n", dp->d_name);
 			numDir++;	
-			if(getStat(cwd))
-				printf("%s was modified within a week\n", cwd);
-			openDir (cwd, dp->d_name);
+			openDir (cwd, dp->d_name, list, count);
 		}
 		else if(dp ->d_type == DT_REG)
 		{
 			concat(cwd, dp->d_name);
 			if(getStat(cwd))
-				printf("%s was modified within a week\n", cwd);
+			{
+				//printf("%s was modified within a week\n", cwd);
+				list[*count] = cpyPath(cwd);
+				*count += 1;
+			}
 			cleanDirTo(cwd, dp->d_name);
 			numFile++;
 			//fprintf(stdout, "file: %s\n", dp->d_name);
@@ -234,11 +245,15 @@ int main()
 
 	setHome(cwd);	
 	getStat(cwd);
-	
-	openDir(cwd, " " );
+	char **list = malloc(sizeof(char *) * 100);	
+	int count = 0;	
+	openDir(cwd, " ", list, &count);
 	printf("Dir: %lu, file: %lu\n", numDir, numFile);
-	
 
+	printf("count is %i\n", count);
 
-	printf("%u\n", ONEWEEK);
+	for(int i = 0; i < count; i++)
+		free(list[i]);
+
+	free(list);
 }
