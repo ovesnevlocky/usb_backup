@@ -1,3 +1,2 @@
 /home/kazuy/ws/usb/try_dir
-Dir: 2341, file: 13735
-count is 67
+Dir: 765, file: 4760
