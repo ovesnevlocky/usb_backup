@@ -1,2 +1,2 @@
 /home/kazuy/ws/usb/try_dir
-Dir: 765, file: 4760
+Dir: 1, file: 0

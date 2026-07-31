@@ -17,14 +17,21 @@
 
 #define ONEWEEK 7*24*60*60
 
-bool isNull(void *a);
+typedef struct 
+{
+	char *paths[4096];
+	char *pathUsb[4096];
+	time_t modified_at;
+}file_t;	
+
+bool isNull(const void *a);
 
 
 void concat(char *dst, const char *dir_to);
 
 void cleanDirTo(char *dst,const  char *path);
 
-bool getStat(char *path);
+time_t getStat(char *path);
 
 char *cpyPath(const char *path)
 {
@@ -68,13 +75,13 @@ size_t numDir = 0;
 size_t numFile = 0;
 
 
-bool copyFile(const char *cwd, const char *fname)
+char * copyFile(const char *cwd, const char *fname)
 {
 	FILE *fp = fopen(cwd, "rb");
 	if(!fp)
 	{
 		perror(cwd);
-		return false;
+		return NULL;
 	}
 	
 	char *pathUsb = "/mnt/usb/copied";
@@ -82,6 +89,7 @@ bool copyFile(const char *cwd, const char *fname)
 	char saveTo[PATH_MAX] = {0};
 	memcpy(saveTo, pathUsb, strlen(pathUsb));
 	concat(saveTo, fname);
+
 
 	FILE *fp_out = fopen(saveTo, "wb");
 	if(!fp_out)
@@ -105,17 +113,19 @@ bool copyFile(const char *cwd, const char *fname)
 			perror("fwrite");
 			fclose(fp_out);
 			fclose(fp);
-			return false;
+			return NULL;
 		}	
 	}
 
+	char *ret = cpyPath(saveTo);
+
 	fclose(fp_out);
 	fclose(fp);
-	return true;
+	return ret;
 }
 
 
-void openDir(char *cwd, char *dir_to, char **list, int *count)
+void openDir(char *cwd, char *dir_to, file_t *list, int *count)
 {
 
 	concat(cwd, dir_to);
@@ -128,7 +138,7 @@ void openDir(char *cwd, char *dir_to, char **list, int *count)
 		return;
 	}
         struct dirent *dp; 
-	
+	time_t modified_at;	
 	do	
 	{
 		errno = 0;
@@ -154,11 +164,19 @@ void openDir(char *cwd, char *dir_to, char **list, int *count)
 		else if(dp ->d_type == DT_REG)
 		{
 			concat(cwd, dp->d_name);
-			if(getStat(cwd))
+			modified_at = getStat(cwd);
+			if(modified_at)
 			{
 				//printf("%s was modified within a week\n", cwd);
-				list[*count] = cpyPath(cwd);
-				copyFile(cwd, dp->d_name);	
+				list[*count].paths[*count] = cpyPath(cwd);
+				list[*count].modified_at = modified_at;
+				char * ret = copyFile(cwd, dp->d_name);	
+				if(isNull(ret))
+				{
+					continue;
+				}
+				list[*count].pathUsb[*count] = ret;
+				printf("path copied: %s\n path src %s\n", ret, list[*count].paths[*count]);
 				*count += 1;
 
 			}
@@ -173,12 +191,12 @@ void openDir(char *cwd, char *dir_to, char **list, int *count)
 	return;
 }
 
-bool isNull(void *a)
+bool isNull(const void *a)
 {
 	return a == NULL;
 }
 
-void concat(char *dst,const  char *dir_to)
+void concat(char *dst,const char *dir_to)
 {
 	if(isNull(dst))
 	{
@@ -212,25 +230,24 @@ void concat(char *dst,const  char *dir_to)
 
 void setHome(char *cwd)
 {
-	char *path = "/home/kazuy/ws";
+	char *path = "/home/kazuy/ws/usb/try_dir/test1";
 	int i = 0;
 	for(; path[i] != '\0'; i++)
 		cwd[i] = path[i];
 	cwd[i] = '\0';
 }
 
-
-bool isModifiedWithinWeek(unsigned long lastModified)
+//returns time if a given lastModified is within a week otherwise 0
+time_t isModifiedWithinWeek(unsigned long lastModified)
 {
 	time_t now;
 	now = time(NULL);
 	
-	return lastModified + ONEWEEK  >= now;
+	return lastModified + ONEWEEK  >= now ? lastModified : 0;
 
 }
 
-
-bool getStat(char *path)
+time_t getStat(char *path)
 {
 	struct stat sb;
 	
@@ -241,52 +258,10 @@ bool getStat(char *path)
         	return false;
     	}
 
-	/*
-	printf("ID of containing device:  [%x,%x]\n",
-               major(sb.st_dev),
-               minor(sb.st_dev));
-
-        printf("File type:                ");
-
-        switch (sb.st_mode & S_IFMT) 
-	{
-           case S_IFBLK:  printf("block device\n");            break;
-           case S_IFCHR:  printf("character device\n");        break;
-           case S_IFDIR:  printf("directory\n");               break;
-           case S_IFIFO:  printf("FIFO/pipe\n");               break;
-           case S_IFLNK:  printf("symlink\n");                 break;
-           case S_IFREG:  printf("regular file\n");            break;
-           case S_IFSOCK: printf("socket\n");                  break;
-           default:       printf("unknown?\n");                break;
-         }
-
-         printf("I-node number:            %ju\n", (uintmax_t) sb.st_ino);
-
-         printf("Mode:                     %jo (octal)\n",
-                (uintmax_t) sb.st_mode);
-
-         printf("Link count:               %ju\n", (uintmax_t) sb.st_nlink);
-         printf("Ownership:                UID=%ju   GID=%ju\n",
-                  (uintmax_t) sb.st_uid, (uintmax_t) sb.st_gid);
-
-         printf("Preferred I/O block size: %jd bytes\n",
-                 (intmax_t) sb.st_blksize);
-         printf("File size:                %jd bytes\n",
-                  (intmax_t) sb.st_size);
-         printf("Blocks allocated:         %jd\n",
-                 (intmax_t) sb.st_blocks);
-
-         printf("Last status change:       %s", ctime(&sb.st_ctime));
-         printf("Last file access:         %s", ctime(&sb.st_atime));
-         printf("Last file modification:   %s", ctime(&sb.st_mtime));
-
-	 
-         printf("Last file modification:   %lu\n", sb.st_mtime);
-	 */
-
 	 return isModifiedWithinWeek(sb.st_mtime);
 
 }
+
 
 
 int main()
@@ -297,13 +272,17 @@ int main()
 
 	setHome(cwd);	
 	//getStat(cwd);
-	char **list = malloc(sizeof(char *) * 100);	
+	file_t *list = malloc(sizeof(file_t) * 100);	
 	int count = 0;	
 	openDir(cwd, " ", list, &count);
 	printf("Dir: %lu, file: %lu\n", numDir, numFile);
 
 	for(int i = 0; i < count; i++)
-		free(list[i]);
+	{
+		free(list[i].paths[i]);
+		free(list[i].pathUsb[i]);
+	}
+
 
 	free(list);
 }
