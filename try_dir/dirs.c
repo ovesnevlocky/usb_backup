@@ -17,12 +17,23 @@
 
 #define ONEWEEK 7*24*60*60
 
+
+typedef struct
+{
+	char *pathOriginal;
+	char *pathUsb;
+	time_t modified_at;
+
+}file_t;
+
 typedef struct 
 {
-	char *paths[4096];
-	char *pathUsb[4096];
-	time_t modified_at;
-}file_t;	
+	file_t *files;
+	size_t count;
+	char *cwdUsb;
+
+}files;
+
 
 bool isNull(const void *a);
 
@@ -71,10 +82,7 @@ static inline bool isHidden(char *d_name)
 
 }
 
-size_t numDir = 0;
-size_t numFile = 0;
-
-
+//copy a file, returns path in Usb if success, otherwise NULL
 char * copyFile(const char *cwd, const char *fname)
 {
 	FILE *fp = fopen(cwd, "rb");
@@ -100,12 +108,14 @@ char * copyFile(const char *cwd, const char *fname)
 
 	char buff[4096] = {0};
 
-	fprintf(fp_out, "original at: %s\n", cwd);
+	printf("opened %s\n", cwd);
+	//fprintf(fp_out, "original at: %s\n", cwd);
 	size_t byteWritten, byteRead;	
 	while(byteRead = fread(buff, 1, sizeof(buff), fp))
 	{
 		if(byteRead <= 0)
 			break;
+
 		byteWritten = fwrite(buff, 1, byteRead, fp_out);
 		if(byteWritten != byteRead)
 		{
@@ -114,7 +124,9 @@ char * copyFile(const char *cwd, const char *fname)
 			fclose(fp_out);
 			fclose(fp);
 			return NULL;
-		}	
+		}
+
+		memset(buff, 0, sizeof(buff));
 	}
 
 	char *ret = cpyPath(saveTo);
@@ -125,7 +137,7 @@ char * copyFile(const char *cwd, const char *fname)
 }
 
 
-void openDir(char *cwd, char *dir_to, file_t *list, int *count)
+void openDir(char *cwd, char *dir_to, files *list)
 {
 
 	concat(cwd, dir_to);
@@ -138,7 +150,6 @@ void openDir(char *cwd, char *dir_to, file_t *list, int *count)
 		return;
 	}
         struct dirent *dp; 
-	time_t modified_at;	
 	do	
 	{
 		errno = 0;
@@ -158,30 +169,30 @@ void openDir(char *cwd, char *dir_to, file_t *list, int *count)
 			}
 
 			//fprintf(stdout, "-----open dir: %s -----\n", dp->d_name);
-			numDir++;	
-			openDir (cwd, dp->d_name, list, count);
+			openDir (cwd, dp->d_name, list);
 		}
 		else if(dp ->d_type == DT_REG)
 		{
 			concat(cwd, dp->d_name);
-			modified_at = getStat(cwd);
+			time_t modified_at = getStat(cwd);
 			if(modified_at)
 			{
 				//printf("%s was modified within a week\n", cwd);
-				list[*count].paths[*count] = cpyPath(cwd);
-				list[*count].modified_at = modified_at;
+				list->files[list->count].modified_at = modified_at;
+				list->files[list->count].pathOriginal = cpyPath(cwd);
 				char * ret = copyFile(cwd, dp->d_name);	
 				if(isNull(ret))
 				{
 					continue;
 				}
-				list[*count].pathUsb[*count] = ret;
-				printf("path copied: %s\n path src %s\n", ret, list[*count].paths[*count]);
-				*count += 1;
+
+				list->files[list->count].pathUsb = ret;
+				printf("path copied: %s\n path src %s\n",
+						list->files[list->count].pathUsb, list->files[list->count].pathOriginal);
+				list->count += 1;
 
 			}
 			cleanDirTo(cwd, dp->d_name);
-			numFile++;
 			//fprintf(stdout, "file: %s\n", dp->d_name);
 		}
 	}while(dirp);
@@ -214,16 +225,10 @@ void concat(char *dst,const char *dir_to)
 	if(strcmp(dir_to, " ") == 0)
 			return;
 
-	int i = 0;
-	int dstIdx = strlen(dst);
-	dst[dstIdx++] = '/';
+	dst[strlen(dst)] = '/';
 
-	for(; dir_to[i] != '\0'; i++)
-	{
-		dst[dstIdx++] = dir_to[i];
-	}
-	dst[dstIdx] = '\0';
-	
+	memcpy(dst + strlen(dst), dir_to, strlen(dir_to) + 1);
+
 	return;
 }
 
@@ -232,13 +237,11 @@ void setHome(char *cwd)
 {
 	char *path = "/home/kazuy/ws/usb/try_dir/test1";
 	int i = 0;
-	for(; path[i] != '\0'; i++)
-		cwd[i] = path[i];
-	cwd[i] = '\0';
+	memcpy(cwd, path, strlen(path) + 0); 
 }
 
 //returns time if a given lastModified is within a week otherwise 0
-time_t isModifiedWithinWeek(unsigned long lastModified)
+time_t isModifiedWithinWeek(time_t lastModified)
 {
 	time_t now;
 	now = time(NULL);
@@ -246,6 +249,7 @@ time_t isModifiedWithinWeek(unsigned long lastModified)
 	return lastModified + ONEWEEK  >= now ? lastModified : 0;
 
 }
+
 
 time_t getStat(char *path)
 {
@@ -263,26 +267,29 @@ time_t getStat(char *path)
 }
 
 
-
 int main()
 {
 	char cwd[PATH_MAX] = {0};
 	getcwd(cwd, sizeof(cwd));
-	puts(cwd);	
-
+	puts(cwd);
 	setHome(cwd);	
 	//getStat(cwd);
-	file_t *list = malloc(sizeof(file_t) * 100);	
-	int count = 0;	
-	openDir(cwd, " ", list, &count);
-	printf("Dir: %lu, file: %lu\n", numDir, numFile);
+	files f = {0};
+	f.files = malloc(sizeof(file_t) * 100);
 
-	for(int i = 0; i < count; i++)
+
+	openDir(cwd, " ", &f);
+
+	for(int i = 0; i < f.count; i++)
 	{
-		free(list[i].paths[i]);
-		free(list[i].pathUsb[i]);
+		free(f.files[i].pathOriginal);
+		free(f.files[i].pathUsb);
+
+		f.files[i].pathOriginal = NULL;
+		f.files[i].pathUsb = NULL;
+		
+	
 	}
-
-
-	free(list);
+	free(f.files);
+	f.files = NULL;
 }
