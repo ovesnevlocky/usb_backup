@@ -93,6 +93,11 @@ static inline bool isHidden(char *d_name)
 
 }
 
+static inline bool isGit(char *d_name)
+{
+	return strcmp(d_name, ".git") == 0;
+}	
+
 //copy a file, returns path in Usb if success, otherwise NULL
 char * copyFile(const char *cwd, const char *fname, char *pathUsb)
 {
@@ -117,7 +122,6 @@ char * copyFile(const char *cwd, const char *fname, char *pathUsb)
 
 	char buff[4096] = {0};
 
-	//fprintf(fp_out, "original at: %s\n", cwd);
 	size_t byteWritten, byteRead;	
 	while(byteRead = fread(buff, 1, sizeof(buff), fp))
 	{
@@ -159,9 +163,17 @@ void openDir(char *cwd, char *dir_to, files *list)
 {
 
 	concat(cwd, dir_to);
+
+	puts(cwd);
+
+
 	time_t modified_at = getStat(cwd);
 	if(modified_at)
-		printf("------ newer dir %s ------------\n", dir_to);
+	{
+		concat(list->cwdUsb, dir_to);
+		makedir(list->cwdUsb);
+	}
+
 	DIR *dirp = opendir(cwd);
 
 	if(dirp == NULL)
@@ -182,27 +194,27 @@ void openDir(char *cwd, char *dir_to, files *list)
 				perror("readdir");
 			break;	
 		}			
-	
+
 		if(dp ->d_type == DT_DIR)
-		{	
+		{
 			if(isParentDir(dp->d_name) || isCurrDir(dp->d_name) 
-			|| isHidden(dp->d_name))
+			||  isHidden(dp->d_name))
 			{
 				continue;	
 			}
 			
-
-			time_t modified_at = getStat(cwd);
-				
 			openDir (cwd, dp->d_name, list);
 		}
 		else if(dp ->d_type == DT_REG)
 		{
+			if(isHidden(dp->d_name))
+				continue;
+
 			concat(cwd, dp->d_name);
-			time_t modified_at = getStat(cwd);
-			if(modified_at)
+			time_t Fmodified_at = getStat(cwd);
+
+			if(Fmodified_at)
 			{
-				//printf("%s was modified within a week\n", cwd);
 				list->files[list->count].modified_at = modified_at;
 				list->files[list->count].pathOriginal = cpyPath(cwd);
 				char * ret = copyFile(cwd, dp->d_name, list->cwdUsb);	
@@ -212,18 +224,16 @@ void openDir(char *cwd, char *dir_to, files *list)
 				}
 
 				list->files[list->count].pathUsb = ret;
-				fprintf(stdout, "path copied: %s\n path src %s\n",
-						list->files[list->count].pathUsb, list->files[list->count].pathOriginal);
 				list->count += 1;
 
 			}
 			cleanDirTo(cwd, dp->d_name);
-			//fprintf(stdout, "file: %s\n", dp->d_name);
 		}
 	}while(dirp);
+
 	closedir(dirp);	
 	cleanDirTo(cwd, dir_to);
-//	fprintf(stdout, "-----close dir: %s -----\n\n", strcmp(dir_to, " ") == 0 ? cwd : dir_to);
+	cleanDirTo(list->cwdUsb, dir_to);
 	return;
 }
 
@@ -246,12 +256,16 @@ void concat(char *dst,const char *dir_to)
 		return;
 	}
 
+
 	//the first case
 	if(strcmp(dir_to, " ") == 0)
-			return;
+	{
+		//dst[strlen(dst)] = '/';
+		return;
+	}
+		
 
 	dst[strlen(dst)] = '/';
-
 	memcpy(dst + strlen(dst), dir_to, strlen(dir_to) + 1);
 
 	return;
@@ -280,8 +294,8 @@ time_t getStat(char *path)
 	
     	if (lstat(path, &sb) == -1)	
        	{
-		printf("%s: ", path);
         	perror("lstat");
+		printf("%s: \n", path);
 		
         	return false;
     	}
@@ -311,16 +325,16 @@ void freedata(files *f)
 int main()
 {
 	char cwd[PATH_MAX] = {0};
-	getcwd(cwd, sizeof(cwd));
+	//getcwd(cwd, sizeof(cwd));
 	puts(cwd);
-	setHome(cwd, "/home/kazuy/ws/usb/try_dir/test1");	
+	char *path = "/home/kazuy/ws/usb";
+	setHome(cwd, path);	
 	//getStat(cwd);
 	files f = {0};
 	f.files = malloc(sizeof(file_t) * 100);
 //	getcwd(f.cwdUsb, sizeof(f.cwdUsb));		
 
-	setHome(f.cwdUsb, "/mnt/usb");
-	concat(f.cwdUsb, "copied");
+	setHome(f.cwdUsb, "/mnt/usb/copied");
 
 
 	int check = mkdir(f.cwdUsb,0777);
