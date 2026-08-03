@@ -47,8 +47,9 @@ void concat(char *dst, const char *dir_to);
 
 void cleanDirTo(char *dst,const  char *path);
 
-time_t getStat(char *path);
+time_t getStat(char *path, int period);
 
+static bool isInSameDir(const char *cwdUsb,const char * dir_to);
 char *cpyPath(const char *path)
 {
 	char *ret = malloc(sizeof(char) * (strlen(path) + 1));
@@ -58,19 +59,14 @@ char *cpyPath(const char *path)
 }
 
 
+	//change back to the string before concating//
 void cleanDirTo(char *cwd,const char *dir_to)
 {
 
 	size_t lenDirTo = isNull(dir_to) ? 0 : strlen(dir_to);
-
-	
-	//plus one for '/' char
-	size_t offset = lenDirTo + 1;
-	size_t start = strlen(cwd) - offset;
-	//change back to the string before concating//
 	size_t idx = strlen(cwd) - 1 ;
 
-	while(cwd[idx] !='/')
+	while(idx > 0 && cwd[idx] !='/')
 	{
 		cwd[idx] = '\0';
 		idx--;
@@ -157,26 +153,27 @@ bool makedir(const char *dir)
 {
 	int check = mkdir(dir ,0777);
 	if(!check)
+	{
 		printf("Directory created at %s\n", dir);
+		return check;
+	}
 	else
 		perror("mkdir");
 	
 }
 
-void openDir(char *cwd, char *dir_to, files *list)
+void openDir(char *cwd, char *dir_to, files *list, const int period)
 {
 
 	concat(cwd, dir_to);
 
-	puts(cwd);
-
-
-	time_t modified_at = getStat(cwd);
+	time_t modified_at = getStat(cwd, period);
 	if(modified_at)
 	{
 		concat(list->cwdUsb, dir_to);
 		makedir(list->cwdUsb);
 	}
+
 
 	DIR *dirp = opendir(cwd);
 
@@ -207,7 +204,7 @@ void openDir(char *cwd, char *dir_to, files *list)
 				continue;	
 			}
 			
-			openDir (cwd, dp->d_name, list);
+			openDir (cwd, dp->d_name, list, period);
 		}
 		else if(dp ->d_type == DT_REG)
 		{
@@ -215,7 +212,7 @@ void openDir(char *cwd, char *dir_to, files *list)
 				continue;
 
 			concat(cwd, dp->d_name);
-			time_t Fmodified_at = getStat(cwd);
+			time_t Fmodified_at = getStat(cwd, period);
 
 			if(Fmodified_at)
 			{
@@ -224,12 +221,11 @@ void openDir(char *cwd, char *dir_to, files *list)
 				char * ret = copyFile(cwd, dp->d_name, list->cwdUsb);	
 				if(isNull(ret))
 				{
-					continue;
+					continue;	
 				}
 
 				list->files[list->count].pathUsb = ret;
 				list->count += 1;
-
 			}
 			cleanDirTo(cwd, dp->d_name);
 		}
@@ -237,10 +233,33 @@ void openDir(char *cwd, char *dir_to, files *list)
 
 	closedir(dirp);	
 	cleanDirTo(cwd, dir_to);
-	cleanDirTo(list->cwdUsb, dir_to);
+
+	//leave from dirctory in usb when original cwd leaves//
+	if(isInSameDir(list->cwdUsb, dir_to))
+	{
+		printf("leaving dir %s\n", list->cwdUsb);	
+		cleanDirTo(list->cwdUsb, dir_to);
+	}
 	return;
 }
 
+
+static bool isInSameDir(const char *cwdUsb,const char * dir_to)
+{
+	if(isNull(cwdUsb) || isNull(dir_to))
+	{
+		fprintf(stderr, "%s is points to NULL\n", 
+				cwdUsb == NULL ? cwdUsb : dir_to);
+	}
+
+	size_t len = strlen(dir_to);
+	size_t lenU = strlen(cwdUsb);
+
+	printf("%s, %s\n", cwdUsb + lenU - len, dir_to);
+	return strncmp(cwdUsb + lenU - len, dir_to, lenU);
+
+	
+}
 bool isNull(const void *a)
 {
 	return a == NULL;
@@ -282,17 +301,17 @@ void setHome(char *dst, char *path)
 }
 
 //returns time if a given lastModified is within a week otherwise 0
-time_t isModifiedWithinWeek(time_t lastModified)
+time_t isModifiedWithinPeriod(time_t lastModified, int period)
 {
 	time_t now;
 	now = time(NULL);
 	
-	return lastModified + ONEWEEK  >= now ? lastModified : 0;
+	return lastModified + period  >= now ? lastModified : 0;
 
 }
 
 
-time_t getStat(char *path)
+time_t getStat(char *path, int period)
 {
 	struct stat sb;
 	
@@ -304,7 +323,7 @@ time_t getStat(char *path)
         	return false;
     	}
 
-	 return isModifiedWithinWeek(sb.st_mtime);
+	 return isModifiedWithinPeriod(sb.st_mtime, period);
 
 }
 
@@ -336,10 +355,8 @@ int main()
 	//getStat(cwd);
 	files f = {0};
 	f.files = malloc(sizeof(file_t) * 100);
-//	getcwd(f.cwdUsb, sizeof(f.cwdUsb));		
 
 	setHome(f.cwdUsb, "/mnt/usb/copied");
-
 
 	int check = mkdir(f.cwdUsb,0777);
 	if(!check)
@@ -347,15 +364,31 @@ int main()
 	else
 		perror("mkdir");
 	
-	openDir(cwd, " ", &f);
+	openDir(cwd, " ", &f, ONEDAY);
 
+	
 	freedata(&f);
 
 
 	return 0;
 }
 
+void startBackUp(files *f, char *home)
+{
+	int period = ONEMIN;
 
+	while(true)
+	{
+		for(int i = 0; i < f->count; i++)
+		{
+			file_t curr = f->files[i];
+			time_t a;
+		
+		}
+	}
+
+
+}
 
 void printStat(const char *path)
 {
