@@ -260,6 +260,7 @@ static bool isInSameDir(const char *cwdUsb,const char * dir_to)
 
 	
 }
+
 bool isNull(const void *a)
 {
 	return a == NULL;
