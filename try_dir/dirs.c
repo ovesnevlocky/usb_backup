@@ -50,6 +50,7 @@ void cleanDirTo(char *dst,const  char *path);
 time_t getStat(char *path, int period);
 
 static bool isInSameDir(const char *cwdUsb,const char * dir_to);
+
 char *cpyPath(const char *path)
 {
 	char *ret = malloc(sizeof(char) * (strlen(path) + 1));
@@ -72,28 +73,25 @@ void cleanDirTo(char *cwd,const char *dir_to)
 		idx--;
 	}
 	cwd[idx] = '\0';
-
-	//memset(cwd + start , 0,  offset);
-
 }
 
-static inline bool isParentDir(char *d_name)
+static inline bool isParentDir(const char *d_name)
 {
 	return strcmp(d_name, "..") == 0;
 }	
 
-static inline bool isCurrDir(char *d_name)
+static inline bool isCurrDir(const char *d_name)
 {
 	return strcmp(d_name, ".") == 0;
 }	
 
-static inline bool isHidden(char *d_name)
+static inline bool isHidden(const char *d_name)
 {
 	return d_name[0] == '.';
 
 }
 
-static inline bool isGit(char *d_name)
+static inline bool isGit(const char *d_name)
 {
 	return strcmp(d_name, ".git") == 0;
 }	
@@ -256,7 +254,7 @@ static bool isInSameDir(const char *cwdUsb,const char * dir_to)
 	size_t lenU = strlen(cwdUsb);
 
 	printf("%s, %s\n", cwdUsb + lenU - len, dir_to);
-	return strncmp(cwdUsb + lenU - len, dir_to, lenU);
+	return strncmp(cwdUsb + lenU - len, dir_to, len ) == 0;
 
 	
 }
@@ -301,7 +299,7 @@ void setHome(char *dst, char *path)
 	memcpy(dst, path, strlen(path) + 1); 
 }
 
-//returns time if a given lastModified is within a week otherwise 0
+//returns time if a given lastModified is within given period otherwise 0
 time_t isModifiedWithinPeriod(time_t lastModified, int period)
 {
 	time_t now;
@@ -338,12 +336,10 @@ void freedata(files *f)
 
 		f->files[i].pathOriginal = NULL;
 		f->files[i].pathUsb = NULL;
-		
-	
 	}
+
 	free(f->files);
 	f->files = NULL;
-
 }
 
 int main()
@@ -367,9 +363,7 @@ int main()
 	
 	openDir(cwd, " ", &f, ONEDAY);
 
-	
 	freedata(&f);
-
 
 	return 0;
 }
