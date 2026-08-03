@@ -15,8 +15,12 @@
 
 #include <stdint.h>
 
-#define ONEWEEK 7*24*60*60
 
+#define ONEMIN 60
+
+#define ONEDAY 24*60*ONEMIN
+
+#define ONEWEEK 7*ONEDAY
 
 typedef struct
 {
