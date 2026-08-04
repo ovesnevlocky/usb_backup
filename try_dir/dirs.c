@@ -8,7 +8,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdbool.h>
-
+#include <stdint.h>
 #include <time.h>
 
 #include <sys/sysmacros.h>
@@ -34,12 +34,13 @@ typedef struct
 {
 	file_t *files;
 	size_t count;
+	uint64_t byteWritten;
+	uint64_t capacity;
 	char cwdUsb[PATH_MAX];
+}usb_t;
 
-}files;
 
-
-bool isNull(const void *a);
+static inline bool isNull(const void *a);
 
 void printStat(const char *path);
 
@@ -49,7 +50,26 @@ void cleanDirTo(char *dst,const  char *path);
 
 time_t getStat(char *path, int period);
 
-static bool isInSameDir(const char *cwdUsb,const char * dir_to);
+bool isInSameDir(const char *cwdUsb,const char * dir_to);
+
+void openDir(char *cwd, char *dir_to, usb_t *list, const int period);
+
+char *cpyPath(const char *path);
+
+static inline bool isParentDir(const char *d_name);
+
+static inline bool isCurrDir(const char *d_name);
+
+static inline bool isHidden(const char *d_name);
+
+bool makedir(const char *dir);
+
+void concat(char *dst,const char *dir_to);
+void setHome(char *dst, char *path);
+time_t isModifiedWithinPeriod(time_t lastModified, int period);
+time_t getStat(char *path, int period);
+void freedata(usb_t *f);
+void startBackUp(usb_t *f, char *home);
 
 char *cpyPath(const char *path)
 {
@@ -88,7 +108,6 @@ static inline bool isCurrDir(const char *d_name)
 static inline bool isHidden(const char *d_name)
 {
 	return d_name[0] == '.';
-
 }
 
 static inline bool isGit(const char *d_name)
@@ -97,25 +116,28 @@ static inline bool isGit(const char *d_name)
 }	
 
 //copy a file, returns path in Usb if success, otherwise NULL
-char * copyFile(const char *cwd, const char *fname, char *pathUsb)
+uint64_t copyFile(const char *cwd,const  char *saveTo)
 {
+	if(isNull(cwd) || isNull(saveTo))
+	{
+		fprintf(stderr, "%s is points to NULL at copyFile\n", 
+				cwd == NULL ? "cwd" : "saveTo" );
+		return 0;
+	}
+
+
 	FILE *fp = fopen(cwd, "rb");
 	if(!fp)
 	{
 		perror(cwd);
-		return NULL;
+		return 0;
 	}
 	
-	char saveTo[PATH_MAX] = {0};
-	memcpy(saveTo, pathUsb, strlen(pathUsb));
-	concat(saveTo, fname);
-
-
 	FILE *fp_out = fopen(saveTo, "wb");
 	if(!fp_out)
 	{
 		perror(cwd);
-		return false;
+		return 0;
 	}
 
 	char buff[4096] = {0};
@@ -133,17 +155,15 @@ char * copyFile(const char *cwd, const char *fname, char *pathUsb)
 			perror("fwrite");
 			fclose(fp_out);
 			fclose(fp);
-			return NULL;
+			return 0;
 		}
 
 		memset(buff, 0, sizeof(buff));
 	}
 
-	char *ret = cpyPath(saveTo);
-
 	fclose(fp_out);
 	fclose(fp);
-	return ret;
+	return byteWritten;
 }
 
 
@@ -157,10 +177,12 @@ bool makedir(const char *dir)
 	}
 	else
 		perror("mkdir");
+
+	return false;
 	
 }
 
-void openDir(char *cwd, char *dir_to, files *list, const int period)
+void openDir(char *cwd, char *dir_to, usb_t *list, const int period)
 {
 
 	concat(cwd, dir_to);
@@ -172,7 +194,6 @@ void openDir(char *cwd, char *dir_to, files *list, const int period)
 		makedir(list->cwdUsb);
 	}
 
-
 	DIR *dirp = opendir(cwd);
 
 	if(dirp == NULL)
@@ -182,11 +203,10 @@ void openDir(char *cwd, char *dir_to, files *list, const int period)
 		return;
 	}
 
-        struct dirent *dp; 
 	do	
 	{
 		errno = 0;
-		dp = readdir(dirp);
+		struct dirent *dp = readdir(dirp);
 		if(dp == NULL)
 		{
 			if(errno !=  0)
@@ -201,7 +221,7 @@ void openDir(char *cwd, char *dir_to, files *list, const int period)
 			{
 				continue;	
 			}
-			
+
 			openDir (cwd, dp->d_name, list, period);
 		}
 		else if(dp ->d_type == DT_REG)
@@ -216,14 +236,16 @@ void openDir(char *cwd, char *dir_to, files *list, const int period)
 			{
 				list->files[list->count].modified_at = modified_at;
 				list->files[list->count].pathOriginal = cpyPath(cwd);
-				char * ret = copyFile(cwd, dp->d_name, list->cwdUsb);	
-				if(isNull(ret))
+				char saveTo[PATH_MAX] = {0};
+				strcpy(saveTo, list->cwdUsb);
+				concat(saveTo, dp->d_name);
+				uint64_t byteWritten = copyFile(cwd, saveTo);
+				if(byteWritten)
 				{
-					continue;	
+					list->files[list->count].pathUsb = cpyPath(saveTo);
+					list->count += 1;
+					list->byteWritten = byteWritten;
 				}
-
-				list->files[list->count].pathUsb = ret;
-				list->count += 1;
 			}
 			cleanDirTo(cwd, dp->d_name);
 		}
@@ -242,20 +264,19 @@ void openDir(char *cwd, char *dir_to, files *list, const int period)
 }
 
 
-static bool isInSameDir(const char *cwdUsb,const char * dir_to)
+bool isInSameDir(const char *cwdUsb,const char * dir_to)
 {
 	if(isNull(cwdUsb) || isNull(dir_to))
 	{
-		fprintf(stderr, "%s is points to NULL\n", 
-				cwdUsb == NULL ? cwdUsb : dir_to);
+		fprintf(stderr, "%s is points to NULL at isInSameDir\n", 
+				cwdUsb == NULL ? "cwdUsb" : "dir_to" );
+		return false;
 	}
 
 	size_t len = strlen(dir_to);
 	size_t lenU = strlen(cwdUsb);
 
-	printf("%s, %s\n", cwdUsb + lenU - len, dir_to);
 	return strncmp(cwdUsb + lenU - len, dir_to, len ) == 0;
-
 	
 }
 
@@ -266,18 +287,12 @@ bool isNull(const void *a)
 
 void concat(char *dst,const char *dir_to)
 {
-	if(isNull(dst))
+	if(isNull(dst) || isNull(dir_to))
 	{
-		fprintf(stderr, "dst points to null\n");
+		fprintf(stderr, "%s is points to NULL in concat\n", 
+				dst == NULL ? "dst" : "dir_to" );
 		return;
 	}
-
-	if(isNull(dir_to))
-	{
-		fprintf(stderr, "dir_to points to null\n");
-		return;
-	}
-
 
 	//the first case
 	if(strcmp(dir_to, " ") == 0)
@@ -292,7 +307,6 @@ void concat(char *dst,const char *dir_to)
 
 	return;
 }
-
 
 void setHome(char *dst, char *path)
 {
@@ -327,7 +341,7 @@ time_t getStat(char *path, int period)
 }
 
 
-void freedata(files *f)
+void freedata(usb_t *f)
 {
 	for(int i = 0; i < f->count; i++)
 	{
@@ -345,12 +359,13 @@ void freedata(files *f)
 int main()
 {
 	char cwd[PATH_MAX] = {0};
+
 	//getcwd(cwd, sizeof(cwd));
 	puts(cwd);
 	char *path = "/home/kazuy/ws/usb";
 	setHome(cwd, path);	
 	//getStat(cwd);
-	files f = {0};
+	usb_t f = {0};
 	f.files = malloc(sizeof(file_t) * 100);
 
 	setHome(f.cwdUsb, "/mnt/usb/copied");
@@ -361,14 +376,13 @@ int main()
 	else
 		perror("mkdir");
 	
-	openDir(cwd, " ", &f, ONEDAY);
-
+	openDir(cwd, " ", &f,ONEDAY* 3);
 	freedata(&f);
 
 	return 0;
 }
 
-void startBackUp(files *f, char *home)
+void startBackUp(usb_t *f, char *home)
 {
 	int period = ONEMIN;
 
