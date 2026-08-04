@@ -22,20 +22,22 @@
 
 #define ONEWEEK 7*ONEDAY
 
+
 typedef struct
 {
 	char *pathOriginal;
 	char *pathUsb;
+	int idx;
 	time_t modified_at;
-
 }file_t;
 
 typedef struct 
 {
 	file_t *files;
 	size_t count;
-	uint64_t byteWritten;
-	uint64_t capacity;
+	uint16_t capacity;
+	uint32_t byteWritten;
+	uint32_t limit;
 	char cwdUsb[PATH_MAX];
 }usb_t;
 
@@ -70,6 +72,8 @@ time_t isModifiedWithinPeriod(time_t lastModified, int period);
 time_t getStat(char *path, int period);
 void freedata(usb_t *f);
 void startBackUp(usb_t *f, char *home);
+
+void *myRealloc(void *old, size_t newSize);
 
 char *cpyPath(const char *path)
 {
@@ -115,8 +119,8 @@ static inline bool isGit(const char *d_name)
 	return strcmp(d_name, ".git") == 0;
 }	
 
-//copy a file, returns path in Usb if success, otherwise NULL
-uint64_t copyFile(const char *cwd,const  char *saveTo)
+//copy a file, returns  bytes written  if success, otherwise 0
+uint32_t copyFile(const char *cwd,const  char *saveTo)
 {
 	if(isNull(cwd) || isNull(saveTo))
 	{
@@ -231,15 +235,21 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const int period)
 
 			concat(cwd, dp->d_name);
 			time_t Fmodified_at = getStat(cwd, period);
-
 			if(Fmodified_at)
 			{
+				if(list->count >= list->capacity)
+				{
+					list->capacity *= 2;
+					myRealloc(list->files, list->capacity * sizeof(file_t));
+
+				}
+				fprintf(stderr, "%s was newly modified\n", cwd);
 				list->files[list->count].modified_at = modified_at;
 				list->files[list->count].pathOriginal = cpyPath(cwd);
 				char saveTo[PATH_MAX] = {0};
 				strcpy(saveTo, list->cwdUsb);
 				concat(saveTo, dp->d_name);
-				uint64_t byteWritten = copyFile(cwd, saveTo);
+				uint32_t byteWritten = copyFile(cwd, saveTo);
 				if(byteWritten)
 				{
 					list->files[list->count].pathUsb = cpyPath(saveTo);
@@ -323,7 +333,6 @@ time_t isModifiedWithinPeriod(time_t lastModified, int period)
 
 }
 
-
 time_t getStat(char *path, int period)
 {
 	struct stat sb;
@@ -331,15 +340,12 @@ time_t getStat(char *path, int period)
     	if (lstat(path, &sb) == -1)	
        	{
         	perror("lstat");
-		printf("%s: \n", path);
-		
-        	return false;
+        	return errno;
     	}
 
 	 return isModifiedWithinPeriod(sb.st_mtime, period);
 
 }
-
 
 void freedata(usb_t *f)
 {
@@ -356,6 +362,18 @@ void freedata(usb_t *f)
 	f->files = NULL;
 }
 
+void *myRealloc(void *old, size_t newSize)
+{
+	void *new = realloc(old, newSize);
+	if(!new)
+	{
+		perror("realloc");
+		return NULL;		
+	}
+
+	return new;
+}
+
 int main()
 {
 	char cwd[PATH_MAX] = {0};
@@ -366,7 +384,9 @@ int main()
 	setHome(cwd, path);	
 	//getStat(cwd);
 	usb_t f = {0};
-	f.files = malloc(sizeof(file_t) * 100);
+	f.capacity = 100;
+
+	f.files = malloc(sizeof(file_t) * f.capacity);
 
 	setHome(f.cwdUsb, "/mnt/usb/copied");
 
@@ -377,25 +397,52 @@ int main()
 		perror("mkdir");
 	
 	openDir(cwd, " ", &f,ONEDAY* 3);
+
+	fprintf(stderr, "%s\n", path);
+	startBackUp(&f, path);
+
 	freedata(&f);
 
 	return 0;
 }
 
+
 void startBackUp(usb_t *f, char *home)
 {
-	int period = ONEMIN;
-
+	int period = ONEMIN/6;
+	errno = 0;
 	while(true)
 	{
 		for(int i = 0; i < f->count; i++)
 		{
-			file_t curr = f->files[i];
-			time_t a;
-		
-		}
-	}
 
+			file_t curr = f->files[i];
+			if(isNull(f->files[i].pathOriginal) || isNull(f->files[i].pathUsb))
+				continue;
+			time_t modified_at = getStat(f->files[i].pathOriginal, period);
+			fprintf(stderr, "checking %s\n", f->files[i].pathOriginal);
+			//removed, moved, .....
+			if(errno == ENOENT)
+			{
+				fprintf(stderr, "%s points to NULL\n", f->files[i].pathOriginal);
+				free(f->files[i].pathOriginal);
+				free(f->files[i].pathUsb);
+				f->files[i].pathOriginal = NULL;
+				f->files[i].pathUsb = NULL;
+				//f->count -= 1;
+				errno = 0;
+				continue;	
+			}
+			if(modified_at)
+			{
+				//make new copy
+				copyFile(f->files[i].pathOriginal, f->files[i].pathUsb);
+				f->files[i].modified_at = modified_at;
+				fprintf(stderr, "%s was changed make another copy\n", f->files[i].pathOriginal);
+			}
+		}
+		sleep(period);
+	}
 
 }
 
@@ -448,3 +495,4 @@ void printStat(const char *path)
 
 
 }
+
