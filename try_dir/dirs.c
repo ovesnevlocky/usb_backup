@@ -64,7 +64,7 @@ static inline bool isCurrDir(const char *d_name);
 
 static inline bool isHidden(const char *d_name);
 
-bool makedir(const char *dir);
+int makedir(const char *dir);
 
 void concat(char *dst,const char *dir_to);
 void setHome(char *dst, char *path);
@@ -136,7 +136,15 @@ uint32_t copyFile(const char *cwd,const  char *saveTo)
 		perror(cwd);
 		return 0;
 	}
+
+	//if file exits but modified time is newer, then make another copy//
+	//if getStat returns error no such files (ENOENT), means the file not yet copied
+	//then just make a new copy
+	//if theres, if getStat returns positive value, then compare
+	//these values and if the value is bigger, make a copy
+	//if these values are the same, then not make copy...
 	
+		
 	FILE *fp_out = fopen(saveTo, "wb");
 	if(!fp_out)
 	{
@@ -171,7 +179,7 @@ uint32_t copyFile(const char *cwd,const  char *saveTo)
 }
 
 
-bool makedir(const char *dir)
+int makedir(const char *dir)
 {
 	int check = mkdir(dir ,0777);
 	if(!check)
@@ -180,9 +188,12 @@ bool makedir(const char *dir)
 		return check;
 	}
 	else
+	{
 		perror("mkdir");
+		return errno;
+	}
 
-	return false;
+	return check;
 	
 }
 
@@ -195,7 +206,7 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const int period)
 	if(modified_at)
 	{
 		concat(list->cwdUsb, dir_to);
-		makedir(list->cwdUsb);
+		int ret = makedir(list->cwdUsb);
 	}
 
 	DIR *dirp = opendir(cwd);
@@ -244,8 +255,6 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const int period)
 
 				}
 				fprintf(stderr, "%s was newly modified\n", cwd);
-				list->files[list->count].modified_at = modified_at;
-				list->files[list->count].pathOriginal = cpyPath(cwd);
 				char saveTo[PATH_MAX] = {0};
 				strcpy(saveTo, list->cwdUsb);
 				concat(saveTo, dp->d_name);
@@ -253,8 +262,11 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const int period)
 				if(byteWritten)
 				{
 					list->files[list->count].pathUsb = cpyPath(saveTo);
+					list->files[list->count].modified_at = modified_at;
+					list->files[list->count].pathOriginal = cpyPath(cwd);
+					list->files[list->count].idx = list->count;
+					list->byteWritten += byteWritten;
 					list->count += 1;
-					list->byteWritten = byteWritten;
 				}
 			}
 			cleanDirTo(cwd, dp->d_name);
@@ -385,7 +397,7 @@ int main()
 	//getStat(cwd);
 	usb_t f = {0};
 	f.capacity = 100;
-
+	f.count = 0;
 	f.files = malloc(sizeof(file_t) * f.capacity);
 
 	setHome(f.cwdUsb, "/mnt/usb/copied");
@@ -406,41 +418,58 @@ int main()
 	return 0;
 }
 
+void checkFiles(usb_t *f, const int period)
+{
+
+	int count = f->count;	
+	fprintf(stderr, "----------------------------\n");	
+	int i = 0;
+
+	while(count > 0)	
+	{
+
+		if(isNull(f->files[i].pathOriginal) || isNull(f->files[i].pathUsb))
+		{
+			i++;
+			continue;
+		}
+
+		time_t modified_at = getStat(f->files[i].pathOriginal, period);
+		fprintf(stderr, "checking %s\n", f->files[i].pathOriginal);
+		//removed, moved, .....
+		if(errno == ENOENT)
+		{
+			fprintf(stderr, "%i: %s points to NULL\n"
+					,f->files[i].idx,  f->files[i].pathOriginal);
+			free(f->files[i].pathOriginal);
+			free(f->files[i].pathUsb);
+			f->files[i].pathOriginal = NULL;
+			f->files[i].pathUsb = NULL;
+			f->count -= 1;
+			errno = 0;
+		}
+		else if(modified_at)
+		{
+			//make new copy
+			copyFile(f->files[i].pathOriginal, f->files[i].pathUsb);
+			f->files[i].modified_at = modified_at;
+			fprintf(stderr, "%s was changed make another copy\n", f->files[i].pathOriginal);
+		}
+		i++;
+		count--;
+	}
+
+}
 
 void startBackUp(usb_t *f, char *home)
 {
 	int period = ONEMIN/6;
 	errno = 0;
+	int freeListHead = f->count;
 	while(true)
 	{
-		for(int i = 0; i < f->count; i++)
-		{
+		checkFiles(f, period);
 
-			file_t curr = f->files[i];
-			if(isNull(f->files[i].pathOriginal) || isNull(f->files[i].pathUsb))
-				continue;
-			time_t modified_at = getStat(f->files[i].pathOriginal, period);
-			fprintf(stderr, "checking %s\n", f->files[i].pathOriginal);
-			//removed, moved, .....
-			if(errno == ENOENT)
-			{
-				fprintf(stderr, "%s points to NULL\n", f->files[i].pathOriginal);
-				free(f->files[i].pathOriginal);
-				free(f->files[i].pathUsb);
-				f->files[i].pathOriginal = NULL;
-				f->files[i].pathUsb = NULL;
-				//f->count -= 1;
-				errno = 0;
-				continue;	
-			}
-			if(modified_at)
-			{
-				//make new copy
-				copyFile(f->files[i].pathOriginal, f->files[i].pathUsb);
-				f->files[i].modified_at = modified_at;
-				fprintf(stderr, "%s was changed make another copy\n", f->files[i].pathOriginal);
-			}
-		}
 		sleep(period);
 	}
 

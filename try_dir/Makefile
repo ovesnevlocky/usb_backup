@@ -19,8 +19,7 @@ $(BIN): $(OBJ)
 -include $(DEP)
 
 run: $(BIN)
-	./$(BIN) $(ARGS) > bin/result.txt
-	cat bin/result.txt
+	./$(BIN) $(ARGS)
 
 clean: 
 	$(RM) -r $(BUILD_DIR) bin
