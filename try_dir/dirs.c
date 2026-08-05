@@ -203,6 +203,20 @@ int makedir(const char *dir)
 	return check;
 }
 
+//i dont want to copy if given file is already copied to usb
+bool isAlreadyCopied(char *pathUsb)
+{
+	FILE *fp = fopen(pathUsb, "rb");
+	if(fp)
+	{
+		fprintf(stderr, "given file is already copied to usb, skip\n");
+		return true;	
+	}
+
+	return false;
+
+}
+
 void openDir(char *cwd, char *dir_to, usb_t *list, const int period)
 {
 
@@ -262,8 +276,17 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const int period)
 				}
 				fprintf(stderr, "%s was newly modified\n", cwd);
 				char saveTo[PATH_MAX] = {0};
-				strcpy(saveTo, list->cwdUsb);
+				memcpy(saveTo, list->cwdUsb, strlen(list->cwdUsb) + 1);
 				concat(saveTo, dp->d_name);
+
+				//dont want to make another copy if already copied
+			//	if(isAlreadyCopied(saveTo) == true)
+			//	{
+			//		//make sure to clean the cwd
+			//		cleanDirTo(cwd, dp->d_name);
+			//		continue;
+			//	}
+
 				uint64_t byteWritten = copyFile(cwd, saveTo, list);
 				if(byteWritten)
 				{
@@ -314,7 +337,7 @@ bool isNull(const void *a)
 	return a == NULL;
 }
 
-void concat(char *dst,const char *dir_to)
+void concat(char *dst, const char *dir_to)
 {
 	if(isNull(dst) || isNull(dir_to))
 	{
@@ -330,9 +353,9 @@ void concat(char *dst,const char *dir_to)
 		return;
 	}
 		
-
-	dst[strlen(dst)] = '/';
-	memcpy(dst + strlen(dst), dir_to, strlen(dir_to) + 1);
+	size_t len = strlen(dst);
+	dst[len] = '/';
+	memcpy(dst + len + 1, dir_to, strlen(dir_to) + 1);
 
 	return;
 }
@@ -407,30 +430,41 @@ uint64_t getAvailability(const char *path)
 	uint64_t free = (uint64_t) vfs.f_bfree * vfs.f_frsize;
 	unsigned long long avail = (unsigned long long) vfs.f_bavail * vfs.f_frsize;
 
-	printf("Total: %llu bytes\n", total);
-	printf("Free: %lu bytes\n", free);
-	printf("avail: %llu bytes\n", avail);
+////	printf("Total: %llu bytes\n", total);
+//	printf("Free: %lu bytes\n", free);
+//	printf("avail: %llu bytes\n", avail);
 	return free;
 
 }
 
-void usbInit(usb_t *u, const char *path)
+bool usbInit(usb_t *u, const char *path)
 {
+	struct statvfs vfs;
+	if(statvfs("/mnt/usb", &vfs) == -1)
+	{
+		perror("statvfs");
+		return false;
+	}
 	u->byteWritten = 0;
 	u->capacity = 100;
 	u->count = 0;
-	setHome(u->cwdUsb, path);	
+	setHome(u->cwdUsb, "/mnt/usb/copied");	
 	u->files =  malloc(sizeof(file_t) * u->capacity);
-	u->limit = getAvailability(path);
+	u->limit = getAvailability("/mnt/usb");
+
+	return true;
 
 }
-int main()
+
+int main(void)
 {
 	char cwd[PATH_MAX] = {0};
 	char *path = "/home/kazuy/ws/usb";
 	setHome(cwd, path);	
+
 	usb_t f;
-	usbInit(&f, "/mnt/usb/copied");
+	if(!usbInit(&f, "/mnt/usb/copied"))
+		exit(1);
 
 
 	int check = mkdir(f.cwdUsb,0777);
@@ -438,9 +472,12 @@ int main()
 		printf("Directory created at %s\n", f.cwdUsb);
 	else
 		perror("mkdir");
-	
-	openDir(cwd, " ", &f,ONEDAY* 3);
 
+
+	openDir(cwd, " ", &f,ONEWEEK * 3);
+
+	freedata(&f);
+	exit(1);
 	fprintf(stderr, "%s\n", path);
 	startBackUp(&f, path);
 
@@ -506,10 +543,19 @@ void startBackUp(usb_t *f, char *home)
 	int period = ONEMIN/6;
 	errno = 0;
 	int freeListHead = f->count;
-
+	int count = 0;
 	while(true)
 	{
 		checkFiles(f, period);
+		count++;
+
+		if(count > 2)
+		{
+			fprintf(stderr, "30 sec passed\n");
+			count = 0;
+			openDir(home, " ", f, ONEMIN);
+			continue;
+		}
 
 		sleep(period);
 	}
