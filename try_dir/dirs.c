@@ -12,6 +12,7 @@
 #include <time.h>
 
 #include <sys/sysmacros.h>
+#include <sys/statvfs.h>
 
 #include <stdint.h>
 
@@ -29,6 +30,7 @@ typedef struct
 	char *pathUsb;
 	int idx;
 	time_t modified_at;
+	uint64_t size;
 }file_t;
 
 typedef struct 
@@ -36,8 +38,8 @@ typedef struct
 	file_t *files;
 	size_t count;
 	uint16_t capacity;
-	uint32_t byteWritten;
-	uint32_t limit;
+	uint64_t byteWritten;
+	uint64_t limit;
 	char cwdUsb[PATH_MAX];
 }usb_t;
 
@@ -67,13 +69,15 @@ static inline bool isHidden(const char *d_name);
 int makedir(const char *dir);
 
 void concat(char *dst,const char *dir_to);
-void setHome(char *dst, char *path);
+void setHome(char *dst, const char *path);
 time_t isModifiedWithinPeriod(time_t lastModified, int period);
 time_t getStat(char *path, int period);
 void freedata(usb_t *f);
 void startBackUp(usb_t *f, char *home);
 
 void *myRealloc(void *old, size_t newSize);
+
+bool isAboveLimit(uint64_t byteRead, uint64_t limit, uint64_t currByte);
 
 char *cpyPath(const char *path)
 {
@@ -83,6 +87,11 @@ char *cpyPath(const char *path)
 	return ret;	
 }
 
+
+bool isAboveLimit(uint64_t byteRead, uint64_t limit, uint64_t currByte)
+{
+	return byteRead+ currByte >= limit;
+}
 
 	//change back to the string before concating//
 void cleanDirTo(char *cwd,const char *dir_to)
@@ -120,7 +129,7 @@ static inline bool isGit(const char *d_name)
 }	
 
 //copy a file, returns  bytes written  if success, otherwise 0
-uint32_t copyFile(const char *cwd,const  char *saveTo)
+uint64_t copyFile(const char *cwd, const  char *saveTo, const usb_t * u)
 {
 	if(isNull(cwd) || isNull(saveTo))
 	{
@@ -137,13 +146,6 @@ uint32_t copyFile(const char *cwd,const  char *saveTo)
 		return 0;
 	}
 
-	//if file exits but modified time is newer, then make another copy//
-	//if getStat returns error no such files (ENOENT), means the file not yet copied
-	//then just make a new copy
-	//if theres, if getStat returns positive value, then compare
-	//these values and if the value is bigger, make a copy
-	//if these values are the same, then not make copy...
-		
 		
 	FILE *fp_out = fopen(saveTo, "wb");
 	if(!fp_out)
@@ -152,13 +154,21 @@ uint32_t copyFile(const char *cwd,const  char *saveTo)
 		return 0;
 	}
 
-	char buff[4096] = {0};
-
-	size_t byteWritten, byteRead;	
-	while(byteRead = fread(buff, 1, sizeof(buff), fp))
+	size_t byteWritten, byteRead;
+	do
 	{
+		char buff[4096] = {0};
+		byteRead = fread(buff, 1, sizeof(buff), fp);
 		if(byteRead <= 0)
 			break;
+	
+		if(isAboveLimit(byteRead, u->limit, u->byteWritten))
+		{
+			fprintf(stderr, "toomuch data at copyFile\n");
+			fclose(fp_out);
+			fclose(fp);
+			return 0;
+		}
 
 		byteWritten = fwrite(buff, 1, byteRead, fp_out);
 		if(byteWritten != byteRead)
@@ -170,14 +180,12 @@ uint32_t copyFile(const char *cwd,const  char *saveTo)
 			return 0;
 		}
 
-		memset(buff, 0, sizeof(buff));
-	}
+	}while(byteRead && fp && fp_out);
 
 	fclose(fp_out);
 	fclose(fp);
 	return byteWritten;
 }
-
 
 int makedir(const char *dir)
 {
@@ -192,9 +200,7 @@ int makedir(const char *dir)
 		perror("mkdir");
 		return errno;
 	}
-
 	return check;
-	
 }
 
 void openDir(char *cwd, char *dir_to, usb_t *list, const int period)
@@ -258,12 +264,13 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const int period)
 				char saveTo[PATH_MAX] = {0};
 				strcpy(saveTo, list->cwdUsb);
 				concat(saveTo, dp->d_name);
-				uint32_t byteWritten = copyFile(cwd, saveTo);
+				uint64_t byteWritten = copyFile(cwd, saveTo, list);
 				if(byteWritten)
 				{
 					list->files[list->count].pathUsb = cpyPath(saveTo);
 					list->files[list->count].modified_at = modified_at;
 					list->files[list->count].pathOriginal = cpyPath(cwd);
+					list->files[list->count].size = byteWritten;
 					list->files[list->count].idx = list->count;
 					list->byteWritten += byteWritten;
 					list->count += 1;
@@ -330,7 +337,7 @@ void concat(char *dst,const char *dir_to)
 	return;
 }
 
-void setHome(char *dst, char *path)
+void setHome(char *dst, const char *path)
 {
 	memcpy(dst, path, strlen(path) + 1); 
 }
@@ -386,21 +393,45 @@ void *myRealloc(void *old, size_t newSize)
 	return new;
 }
 
+
+uint64_t getAvailability(const char *path)
+{
+	struct statvfs vfs;
+	if(statvfs(path, &vfs) == -1)
+	{
+		perror("statvfs");
+		return 0;
+	}
+
+	unsigned long long total = (unsigned long long) vfs.f_blocks * vfs.f_frsize;
+	uint64_t free = (uint64_t) vfs.f_bfree * vfs.f_frsize;
+	unsigned long long avail = (unsigned long long) vfs.f_bavail * vfs.f_frsize;
+
+	printf("Total: %llu bytes\n", total);
+	printf("Free: %lu bytes\n", free);
+	printf("avail: %llu bytes\n", avail);
+	return free;
+
+}
+
+void usbInit(usb_t *u, const char *path)
+{
+	u->byteWritten = 0;
+	u->capacity = 100;
+	u->count = 0;
+	setHome(u->cwdUsb, path);	
+	u->files =  malloc(sizeof(file_t) * u->capacity);
+	u->limit = getAvailability(path);
+
+}
 int main()
 {
 	char cwd[PATH_MAX] = {0};
-
-	//getcwd(cwd, sizeof(cwd));
-	puts(cwd);
 	char *path = "/home/kazuy/ws/usb";
 	setHome(cwd, path);	
-	//getStat(cwd);
-	usb_t f = {0};
-	f.capacity = 100;
-	f.count = 0;
-	f.files = malloc(sizeof(file_t) * f.capacity);
+	usb_t f;
+	usbInit(&f, "/mnt/usb/copied");
 
-	setHome(f.cwdUsb, "/mnt/usb/copied");
 
 	int check = mkdir(f.cwdUsb,0777);
 	if(!check)
@@ -446,14 +477,23 @@ void checkFiles(usb_t *f, const int period)
 			f->files[i].pathOriginal = NULL;
 			f->files[i].pathUsb = NULL;
 			f->count -= 1;
+			//subtract 
+			f->byteWritten -= f->files[i].size;
 			errno = 0;
 		}
 		else if(modified_at)
 		{
 			//make new copy
-			copyFile(f->files[i].pathOriginal, f->files[i].pathUsb);
-			f->files[i].modified_at = modified_at;
-			fprintf(stderr, "%s was changed make another copy\n", f->files[i].pathOriginal);
+			uint64_t bytesWritten = copyFile(f->files[i].pathOriginal, f->files[i].pathUsb, f);
+			if(bytesWritten)
+			{
+				int diff = bytesWritten - f->files[i].size;
+				
+				f->files[i].size += diff;
+				f->byteWritten += diff;
+				f->files[i].modified_at = modified_at;
+				fprintf(stderr, "%s was changed make another copy:%i\n", f->files[i].pathOriginal, diff);
+			}
 		}
 		i++;
 		count--;
@@ -466,6 +506,7 @@ void startBackUp(usb_t *f, char *home)
 	int period = ONEMIN/6;
 	errno = 0;
 	int freeListHead = f->count;
+
 	while(true)
 	{
 		checkFiles(f, period);
