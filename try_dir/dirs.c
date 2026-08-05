@@ -143,7 +143,7 @@ uint32_t copyFile(const char *cwd,const  char *saveTo)
 	//if theres, if getStat returns positive value, then compare
 	//these values and if the value is bigger, make a copy
 	//if these values are the same, then not make copy...
-	
+		
 		
 	FILE *fp_out = fopen(saveTo, "wb");
 	if(!fp_out)
@@ -428,7 +428,7 @@ void checkFiles(usb_t *f, const int period)
 	while(count > 0)	
 	{
 
-		if(isNull(f->files[i].pathOriginal) || isNull(f->files[i].pathUsb))
+		if(isNull(f->files[i].pathOriginal) && isNull(f->files[i].pathUsb))
 		{
 			i++;
 			continue;

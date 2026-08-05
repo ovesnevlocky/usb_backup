@@ -1,6 +1,9 @@
 try/
+bin/
 
 *.swp
+*.swo
+
 *.d
 *.o
 
