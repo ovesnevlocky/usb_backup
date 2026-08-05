@@ -281,6 +281,8 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const int period)
 				//dont want to make another copy if already copied
 				if(isAlreadyCopied(saveTo) == true)
 				{
+					//fprintf(stderr, "%s is already in usb\n", saveTo);
+					
 					//make sure to clean the cwd
 					cleanDirTo(cwd, dp->d_name);
 					continue;
@@ -448,7 +450,7 @@ bool usbInit(usb_t *u, const char *path)
 	u->capacity = 100;
 	u->count = 0;
 	setHome(u->cwdUsb, "/mnt/usb/copied");	
-	u->files =  malloc(sizeof(file_t) * u->capacity);
+	u->files =  calloc(sizeof(file_t),  u->capacity);
 	u->limit = getAvailability("/mnt/usb");
 
 	return true;
@@ -473,9 +475,8 @@ int main(void)
 		perror("mkdir");
 
 
-	openDir(cwd, " ", &f,ONEWEEK * 3);
+	openDir(cwd, " ", &f,ONEDAY);
 
-	fprintf(stderr, "%s\n", path);
 	startBackUp(&f, cwd, "/mnt/usb/copied");
 
 	freedata(&f);
@@ -550,12 +551,14 @@ void startBackUp(usb_t *f, char *cwd, char *usbHome)
 		checkFiles(f, period);
 		count++;
 
+		//again check directories//
 		if(count > 2)
 		{
+
 			fprintf(stderr, "30 sec passed\n");
 			setHome(cwd, "/home/kazuy/ws/usb");
 			setHome(f->cwdUsb, usbHome);
-			openDir(cwd, " ", f, ONEMIN);
+			openDir(cwd, " ", f, period);
 			count = 0;
 		}
 
