@@ -73,7 +73,7 @@ void setHome(char *dst, const char *path);
 time_t isModifiedWithinPeriod(time_t lastModified, int period);
 time_t getStat(char *path, int period);
 void freedata(usb_t *f);
-void startBackUp(usb_t *f, char *home);
+void startBackUp(usb_t *f, char *home, char *usbHome);
 
 void *myRealloc(void *old, size_t newSize);
 
@@ -219,7 +219,6 @@ bool isAlreadyCopied(char *pathUsb)
 
 void openDir(char *cwd, char *dir_to, usb_t *list, const int period)
 {
-
 	concat(cwd, dir_to);
 
 	time_t modified_at = getStat(cwd, period);
@@ -280,12 +279,12 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const int period)
 				concat(saveTo, dp->d_name);
 
 				//dont want to make another copy if already copied
-			//	if(isAlreadyCopied(saveTo) == true)
-			//	{
-			//		//make sure to clean the cwd
-			//		cleanDirTo(cwd, dp->d_name);
-			//		continue;
-			//	}
+				if(isAlreadyCopied(saveTo) == true)
+				{
+					//make sure to clean the cwd
+					cleanDirTo(cwd, dp->d_name);
+					continue;
+				}
 
 				uint64_t byteWritten = copyFile(cwd, saveTo, list);
 				if(byteWritten)
@@ -476,15 +475,15 @@ int main(void)
 
 	openDir(cwd, " ", &f,ONEWEEK * 3);
 
-	freedata(&f);
-	exit(1);
 	fprintf(stderr, "%s\n", path);
-	startBackUp(&f, path);
+	startBackUp(&f, cwd, "/mnt/usb/copied");
 
 	freedata(&f);
 
 	return 0;
 }
+
+
 
 void checkFiles(usb_t *f, const int period)
 {
@@ -538,12 +537,14 @@ void checkFiles(usb_t *f, const int period)
 
 }
 
-void startBackUp(usb_t *f, char *home)
+void startBackUp(usb_t *f, char *cwd, char *usbHome)
 {
-	int period = ONEMIN/6;
+	int period = ONEMIN/10;
 	errno = 0;
 	int freeListHead = f->count;
 	int count = 0;
+	
+		
 	while(true)
 	{
 		checkFiles(f, period);
@@ -552,9 +553,10 @@ void startBackUp(usb_t *f, char *home)
 		if(count > 2)
 		{
 			fprintf(stderr, "30 sec passed\n");
+			setHome(cwd, "/home/kazuy/ws/usb");
+			setHome(f->cwdUsb, usbHome);
+			openDir(cwd, " ", f, ONEMIN);
 			count = 0;
-			openDir(home, " ", f, ONEMIN);
-			continue;
 		}
 
 		sleep(period);
