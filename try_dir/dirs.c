@@ -16,6 +16,7 @@
 
 #include <stdint.h>
 
+#include "stack.h"
 
 #define ONEMIN 60
 
@@ -43,6 +44,12 @@ typedef struct
 	char cwdUsb[PATH_MAX];
 }usb_t;
 
+typedef struct
+{
+	Stack idxAvailable;
+	int idxInUse[MAX_SIZE];
+	int count;
+}idxPool_t;
 
 static inline bool isNull(const void *a);
 
@@ -56,7 +63,7 @@ time_t getStat(char *path, int period);
 
 bool isInSameDir(const char *cwdUsb,const char * dir_to);
 
-void openDir(char *cwd, char *dir_to, usb_t *list, const int period);
+void openDir(char *cwd, char *dir_to, usb_t *list, const int period, idxPool_t *p);
 
 char *cpyPath(const char *path);
 
@@ -73,7 +80,7 @@ void setHome(char *dst, const char *path);
 time_t isModifiedWithinPeriod(time_t lastModified, int period);
 time_t getStat(char *path, int period);
 void freedata(usb_t *f);
-void startBackUp(usb_t *f, char *home, char *usbHome);
+void startBackUp(usb_t *f, char *home, char *usbHome, idxPool_t *p);
 
 void *myRealloc(void *old, size_t newSize);
 
@@ -217,7 +224,7 @@ bool isAlreadyCopied(char *pathUsb)
 
 }
 
-void openDir(char *cwd, char *dir_to, usb_t *list, const int period)
+void openDir(char *cwd, char *dir_to, usb_t *list, const int period, idxPool_t *p)
 {
 	concat(cwd, dir_to);
 
@@ -256,7 +263,7 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const int period)
 				continue;	
 			}
 
-			openDir (cwd, dp->d_name, list, period);
+			openDir (cwd, dp->d_name, list, period, p);
 		}
 		else if(dp ->d_type == DT_REG)
 		{
@@ -291,11 +298,16 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const int period)
 				uint64_t byteWritten = copyFile(cwd, saveTo, list);
 				if(byteWritten)
 				{
-					list->files[list->count].pathUsb = cpyPath(saveTo);
-					list->files[list->count].modified_at = modified_at;
-					list->files[list->count].pathOriginal = cpyPath(cwd);
-					list->files[list->count].size = byteWritten;
-					list->files[list->count].idx = list->count;
+					//pop from stack
+					int idx = stackPop(&p->idxAvailable);
+					p->idxInUse[p->count] = idx;
+					p->count++;
+
+					list->files[idx].pathUsb = cpyPath(saveTo);
+					list->files[idx].modified_at = modified_at;
+					list->files[idx].pathOriginal = cpyPath(cwd);
+					list->files[idx].size = byteWritten;
+					list->files[idx].idx = idx;
 					list->byteWritten += byteWritten;
 					list->count += 1;
 				}
@@ -457,6 +469,22 @@ bool usbInit(usb_t *u, const char *path)
 
 }
 
+void idxPoolInit(idxPool_t *p, uint16_t capacityUsb )
+{
+	stackInit(&p->idxAvailable);
+	memset(p->idxInUse, -1, MAX_SIZE * sizeof(int));
+	p->count = 0;
+	//push from 99 as that is kind of natural i guess.. doesnt really matter	
+	while(capacityUsb > 0)
+	{
+		stackPush(&p->idxAvailable,  (int)capacityUsb - 1);	
+		capacityUsb--;	
+	}
+
+	return;
+}
+
+
 int main(void)
 {
 	char cwd[PATH_MAX] = {0};
@@ -467,7 +495,10 @@ int main(void)
 	if(!usbInit(&f, "/mnt/usb/copied"))
 		exit(1);
 
+	idxPool_t pool;
+	idxPoolInit(&pool, f.capacity);
 
+	
 	int check = mkdir(f.cwdUsb,0777);
 	if(!check)
 		printf("Directory created at %s\n", f.cwdUsb);
@@ -475,9 +506,9 @@ int main(void)
 		perror("mkdir");
 
 
-	openDir(cwd, " ", &f,ONEDAY);
+	openDir(cwd, " ", &f,ONEDAY, &pool);
 
-	startBackUp(&f, cwd, "/mnt/usb/copied");
+	startBackUp(&f, cwd, "/mnt/usb/copied", &pool);
 
 	freedata(&f);
 
@@ -486,19 +517,19 @@ int main(void)
 
 
 
-void checkFiles(usb_t *f, const int period)
+void checkFiles(usb_t *f, const int period, idxPool_t *p)
 {
 
 	int count = f->count;	
 	fprintf(stderr, "----------------------------\n");	
+	int idx = 0;
 	int i = 0;
-
 	while(count > 0)	
 	{
+		i = p->idxInUse[idx++];
 
 		if(isNull(f->files[i].pathOriginal) && isNull(f->files[i].pathUsb))
 		{
-			i++;
 			continue;
 		}
 
@@ -516,6 +547,9 @@ void checkFiles(usb_t *f, const int period)
 			f->count -= 1;
 			//subtract 
 			f->byteWritten -= f->files[i].size;
+
+			//push the freed idx;
+			stackPush(&p->idxAvailable,  (int)f->files[i].idx);
 			errno = 0;
 		}
 		else if(modified_at)
@@ -538,7 +572,7 @@ void checkFiles(usb_t *f, const int period)
 
 }
 
-void startBackUp(usb_t *f, char *cwd, char *usbHome)
+void startBackUp(usb_t *f, char *cwd, char *usbHome, idxPool_t *p)
 {
 	int period = ONEMIN/10;
 	errno = 0;
@@ -548,7 +582,7 @@ void startBackUp(usb_t *f, char *cwd, char *usbHome)
 		
 	while(true)
 	{
-		checkFiles(f, period);
+		checkFiles(f, period, p);
 		count++;
 
 		//again check directories//
@@ -558,7 +592,7 @@ void startBackUp(usb_t *f, char *cwd, char *usbHome)
 			fprintf(stderr, "30 sec passed\n");
 			setHome(cwd, "/home/kazuy/ws/usb");
 			setHome(f->cwdUsb, usbHome);
-			openDir(cwd, " ", f, period);
+			openDir(cwd, " ", f, period, p);
 			count = 0;
 		}
 
