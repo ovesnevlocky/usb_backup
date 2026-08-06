@@ -10,6 +10,12 @@
 #include "../dir_walk/dir_walk.h"
 #include <unistd.h>
 
+
+bool removeFile(const char *path)
+{
+    return remove(path) == 0;
+}
+
 void startBackUp(usb_t *f, char *cwd, char *usbHome, idxPool_t *p)
 {
 	uint32_t period = ONEMIN/10;
@@ -60,8 +66,13 @@ void checkFiles(usb_t *f, const uint32_t period, idxPool_t *p)
 		//removed, moved, .....
 		if(errno == ENOENT)
 		{
+
 			fprintf(stderr, "%i: %s points to NULL\n"
 					,f->files[i].idx,  f->files[i].pathOriginal);
+
+            if(!removeFile(f->files[i].pathUsb))
+                perror("remove");
+                
 			free(f->files[i].pathOriginal);
 			free(f->files[i].pathUsb);
 			f->files[i].pathOriginal = NULL;
@@ -72,6 +83,7 @@ void checkFiles(usb_t *f, const uint32_t period, idxPool_t *p)
 
 			//push the freed idx;
 			stackPush(&p->idxAvailable,  (int)f->files[i].idx);
+            //remove idx from IdxInUse
 			errno = 0;
 		}
 		else if(modified_at)
@@ -87,7 +99,7 @@ void checkFiles(usb_t *f, const uint32_t period, idxPool_t *p)
 
                 f->files[i].size = (uint64_t)newSize;
                 f->byteWritten = (uint64_t)newByteWritten;
-                
+
 				//(int64_t)f->files[i].size += diff;
 				//(int64_t)f->byteWritten += diff;
 				f->files[i].modified_at = modified_at;

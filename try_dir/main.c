@@ -27,7 +27,7 @@
 int main(void)
 {
 	char cwd[PATH_MAX] = {0};
-	char *path = "/home/kazuy/ws/usb";
+	char *path = "/home/kazuy/ws/usb/try_dir/test1";
 	setHome(cwd, path);	
 
 	usb_t f;
