@@ -22,8 +22,8 @@ bool stackPush(Stack *s, int  a);
 
 int stackPeek(Stack *s);
 
-int   stackPop(Stack *s);
-void hellostack();
+int stackPop(Stack *s);
+void hellostack(void);
 
 void stackPrint(const Stack s);
 

@@ -2,7 +2,7 @@
 
 #include "stack.h"
 #include <string.h>
-void hellostack()
+void hellostack(void)
 {
 	printf("helo from stack\n");
 }

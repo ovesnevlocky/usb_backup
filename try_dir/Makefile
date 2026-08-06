@@ -1,10 +1,22 @@
-CC = cc
-CFLAGS = -g -MMD -MP
+C = cc
+CFLAGS = -g -Wall -Wextra -Werror -Wpedantic -Wformat=2 -Wconversion \
+		-fstack-protector-strong -std=c11 -Wshadow -MMD -MP \
+		-D_DEFAULT_SOURCE -Wunreachable-code -Wcast-align -Wcast-qual \
+		-Wnull-dereference -Wstrict-prototypes
 RM = rm -f
 BIN = bin/main
 BUILD_DIR = build
 
-SRC = $(wildcard *.c) $(wildcard ./stack/*.c)
+SRC = $(wildcard *.c)\
+$(wildcard ./stack/*.c) \
+$(wildcard ./backup/*.c) \
+$(wildcard ./dir_walk/*.c) \
+$(wildcard ./file_stat/*.c) \
+$(wildcard ./mem_pool/*.c) \
+$(wildcard ./path_utils/*.c) \
+$(wildcard ./mkdir/*.c) \
+$(wildcard ./usb/*.c)  
+
 OBJ = $(patsubst %.c, $(BUILD_DIR)/%.o, $(SRC))
 DEP = $(OBJ:.o=.d)
 
