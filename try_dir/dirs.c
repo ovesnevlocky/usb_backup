@@ -16,7 +16,7 @@
 
 #include <stdint.h>
 
-#include "stack.h"
+#include "./stack/stack.h"
 
 #define ONEMIN 60
 

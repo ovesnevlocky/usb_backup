@@ -4,7 +4,7 @@ RM = rm -f
 BIN = bin/main
 BUILD_DIR = build
 
-SRC = $(wildcard *.c)
+SRC = $(wildcard *.c) $(wildcard ./stack/*.c)
 OBJ = $(patsubst %.c, $(BUILD_DIR)/%.o, $(SRC))
 DEP = $(OBJ:.o=.d)
 
