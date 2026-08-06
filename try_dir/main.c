@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <dirent.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -6,10 +5,8 @@
 #include <sys/types.h>
 #include <linux/limits.h>
 #include <errno.h>
-#include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <time.h>
 
 #include <sys/sysmacros.h>
 #include <sys/statvfs.h>
@@ -27,7 +24,7 @@
 int main(void)
 {
 	char cwd[PATH_MAX] = {0};
-	char *path = "/home/kazuy/ws/usb/try_dir/test1";
+	char *path = "/home/kazuy/ws/usb/try_dir/testdir";
 	setHome(cwd, path);	
 
 	usb_t f;
@@ -42,8 +39,6 @@ int main(void)
 	if(check == EFAULT)
 			exit(EXIT_FAILURE);
 	
-		
-
 	openDir(cwd, " ", &f,ONEDAY, &pool);
 
 	startBackUp(&f, cwd, "/mnt/usb/copied", &pool);
