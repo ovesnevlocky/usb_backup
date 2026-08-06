@@ -29,6 +29,7 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPoo
 		int ret = makedir(list->cwdUsb, 0777);
 		if(!ret)
 			perror("mkdir");
+	
 	}
 
 	DIR *dirp = opendir(cwd);

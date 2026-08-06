@@ -39,8 +39,9 @@ int main(void)
 
 	
 	int check = makedir(f.cwdUsb, 0777);
-	if(!check)
-		exit(1);
+	if(check == EFAULT)
+			exit(EXIT_FAILURE);
+	
 		
 
 	openDir(cwd, " ", &f,ONEDAY, &pool);
