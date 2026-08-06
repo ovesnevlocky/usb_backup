@@ -1,8 +1,5 @@
 C = cc
-CFLAGS = -g -Wall -Wextra -Werror -Wpedantic -Wformat=2 -Wconversion \
-		-fstack-protector-strong -std=c11 -Wshadow -MMD -MP \
-		-D_DEFAULT_SOURCE -Wunreachable-code -Wcast-align -Wcast-qual \
-		-Wnull-dereference -Wstrict-prototypes
+CFLAGS = -g
 RM = rm -f
 BIN = bin/main
 BUILD_DIR = build

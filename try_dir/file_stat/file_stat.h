@@ -8,6 +8,8 @@
 
 #define ONEDAY 24*60*ONEMIN
 
+#define ONEHOUR ONEMIN * 60
+
 #define ONEWEEK 7*ONEDAY
 
 

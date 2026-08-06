@@ -95,18 +95,25 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPoo
 				uint64_t byteWritten = copyFile(cwd, saveTo, list);
 				if(byteWritten)
 				{
-					//pop from stack
+					//pop an available idx from stack 
 					int idx = stackPop(&p->idxAvailable);
-					p->idxInUse[p->count] = idx;
-					p->count++;
 
+					//mark as being used
+					if(p->idxInUse[idx] == false)
+						p->idxInUse[idx] = true;
+					else
+						fprintf(stderr, "this idx:%i is in use...\n", idx);
+					
 					list->files[idx].pathUsb = cpyPath(saveTo);
 					list->files[idx].modified_at = modified_at;
 					list->files[idx].pathOriginal = cpyPath(cwd);
 					list->files[idx].size = byteWritten;
+					//assign the popped idx
 					list->files[idx].idx = idx;
 					list->byteWritten += byteWritten;
 					list->count += 1;
+					p->count += 1;
+
 				}
 			}
 			cleanDirTo(cwd);

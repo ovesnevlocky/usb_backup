@@ -13,8 +13,9 @@
 typedef struct
 {
 	Stack idxAvailable;
-	int idxInUse[MAX_SIZE];
-	int count;
+	bool idxInUse[MAX_SIZE];
+	size_t count;
+
 }idxPool_t;
 
 

@@ -35,10 +35,10 @@ void *myRealloc(void *old, size_t newSize)
 }
 
 
-void idxPoolInit(idxPool_t *p, uint16_t capacityUsb )
+void idxPoolInit(idxPool_t *p, uint16_t capacityUsb)
 {
 	stackInit(&p->idxAvailable);
-	memset(p->idxInUse, -1, MAX_SIZE * sizeof(int));
+	memset(p->idxInUse, false, MAX_SIZE * sizeof(bool));
 	p->count = 0;
 	//push from 99 as that is kind of natural i guess.. doesnt really matter	
 	while(capacityUsb > 0)
@@ -52,5 +52,5 @@ void idxPoolInit(idxPool_t *p, uint16_t capacityUsb )
 
 bool isAboveLimit(uint64_t byteRead, uint64_t limit, uint64_t currByte)
 {
-	return byteRead+ currByte >= limit;
+	return byteRead + currByte >= limit;
 }

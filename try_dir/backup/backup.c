@@ -13,15 +13,17 @@
 
 bool removeFile(const char *path)
 {
+	fprintf(stderr, "deleting %s\n", path);
     return remove(path) == 0;
 }
 
 void startBackUp(usb_t *f, char *cwd, char *usbHome, idxPool_t *p)
 {
 	uint32_t period = ONEMIN/10;
+
 	errno = 0;
 	int count = 0;
-		
+	int count_ = 0;	
 	while(true)
 	{
 		checkFiles(f, period, p);
@@ -32,34 +34,57 @@ void startBackUp(usb_t *f, char *cwd, char *usbHome, idxPool_t *p)
 		{
 
 			fprintf(stderr, "30 sec passed\n");
-			setHome(cwd, "/home/kazuy/ws/usb");
+			setHome(cwd, "/home/kazuy/ws/usb/try_dir/testdir");
 			setHome(f->cwdUsb, usbHome);
-			openDir(cwd, " ", f, period, p);
+			openDir(cwd, " ", f, ONEMIN * 5, p);
 			count = 0;
+			count_++;
 		}
 
 		sleep(period);
+		if(count_ > 3)
+			return;
 	}
 
 }
 
 
+void printCheck(const char *path1, const char *path2)
+{
+	if(!isNull(path1))
+		fputs(path1, stderr);
+	if(!isNull(path2))
+		fputs(path2, stderr);
+
+}
 
 void checkFiles(usb_t *f, const uint32_t period, idxPool_t *p)
 {
 
 	size_t count = f->count;	
 	fprintf(stderr, "----------------------------\n");	
-	int idx = 0;
-	int i = 0;
-	while(count > 0)	
-	{
-		i = p->idxInUse[idx++];
 
-		if(isNull(f->files[i].pathOriginal) && isNull(f->files[i].pathUsb))
+	if(f->count != p->count)
+		fprintf(stderr, "counts dont agree . ... p: %lu, u: %lu\n", p->count, f->count);
+
+	for(size_t i = 0; i < p->count && count > 0 ; i++)
+	{
+		
+		if(p->idxInUse[i] == false)
 		{
-			continue;
+			if(isNull(f->files[i].pathOriginal) && isNull(f->files[i].pathUsb))
+			{
+				continue;
+			}
+			else
+			{
+				fprintf(stderr, "not in use but points to some??");
+				printCheck(f->files[i].pathOriginal, f->files[i].pathUsb);
+				continue;
+			}
+
 		}
+
 
 		time_t modified_at = getStat(f->files[i].pathOriginal, period);
 		fprintf(stderr, "checking %s\n", f->files[i].pathOriginal);
@@ -70,20 +95,22 @@ void checkFiles(usb_t *f, const uint32_t period, idxPool_t *p)
 			fprintf(stderr, "%i: %s points to NULL\n"
 					,f->files[i].idx,  f->files[i].pathOriginal);
 
-            if(!removeFile(f->files[i].pathUsb))
-                perror("remove");
+            		if(!removeFile(f->files[i].pathUsb))
+                		perror("remove");
                 
 			free(f->files[i].pathOriginal);
 			free(f->files[i].pathUsb);
 			f->files[i].pathOriginal = NULL;
 			f->files[i].pathUsb = NULL;
+			p->count -= 1;
 			f->count -= 1;
 			//subtract 
 			f->byteWritten -= f->files[i].size;
-
 			//push the freed idx;
 			stackPush(&p->idxAvailable,  (int)f->files[i].idx);
-            //remove idx from IdxInUse
+			//setfalse
+			p->idxInUse[f->files[i].idx] = false;
+
 			errno = 0;
 		}
 		else if(modified_at)
@@ -94,11 +121,11 @@ void checkFiles(usb_t *f, const uint32_t period, idxPool_t *p)
 			{
 				int64_t diff = (int64_t) bytesWritten - (int64_t) f->files[i].size;
 				
-                int64_t newSize = (int64_t)f->files[i].size + diff;
-                int64_t newByteWritten = (int64_t)f->byteWritten + diff;
+                		int64_t newSize = (int64_t)f->files[i].size + diff;
+                		int64_t newByteWritten = (int64_t)f->byteWritten + diff;
 
-                f->files[i].size = (uint64_t)newSize;
-                f->byteWritten = (uint64_t)newByteWritten;
+                		f->files[i].size = (uint64_t)newSize;
+                		f->byteWritten = (uint64_t)newByteWritten;
 
 				//(int64_t)f->files[i].size += diff;
 				//(int64_t)f->byteWritten += diff;
@@ -106,7 +133,6 @@ void checkFiles(usb_t *f, const uint32_t period, idxPool_t *p)
 				//fprintf(stderr, "%s was changed make another copy:%i\n", f->files[i].pathOriginal, diff);
 			}
 		}
-		i++;
 		count--;
 	}
 
