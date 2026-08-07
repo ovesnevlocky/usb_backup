@@ -14,7 +14,7 @@
 bool removeFile(const char *path)
 {
 	fprintf(stderr, "deleting %s\n", path);
-    return remove(path) == 0;
+    	return remove(path) == 0;
 }
 
 void startBackUp(usb_t *f, char *cwd, char *usbHome, idxPool_t *p)
@@ -36,14 +36,14 @@ void startBackUp(usb_t *f, char *cwd, char *usbHome, idxPool_t *p)
 			fprintf(stderr, "30 sec passed\n");
 			setHome(cwd, "/home/kazuy/ws/usb/try_dir/testdir");
 			setHome(f->cwdUsb, usbHome);
-			openDir(cwd, " ", f, ONEMIN * 5, p);
+			openDir(cwd, " ", f, ONEMIN/2, p);
 			count = 0;
 			count_++;
 		}
 
 		sleep(period);
-		if(count_ > 3)
-			return;
+		//if(count_ > 3)
+		//	return;
 	}
 
 }
@@ -60,7 +60,8 @@ void printCheck(const char *path1, const char *path2)
 
 void checkFiles(usb_t *f, const uint32_t period, idxPool_t *p)
 {
-
+	
+	//as we want to walk through all the files we have at this point
 	size_t count = f->count;	
 	fprintf(stderr, "----------------------------\n");	
 
@@ -72,6 +73,7 @@ void checkFiles(usb_t *f, const uint32_t period, idxPool_t *p)
 		
 		if(p->idxInUse[i] == false)
 		{
+			
 			if(isNull(f->files[i].pathOriginal) && isNull(f->files[i].pathUsb))
 			{
 				continue;
@@ -127,10 +129,7 @@ void checkFiles(usb_t *f, const uint32_t period, idxPool_t *p)
                 		f->files[i].size = (uint64_t)newSize;
                 		f->byteWritten = (uint64_t)newByteWritten;
 
-				//(int64_t)f->files[i].size += diff;
-				//(int64_t)f->byteWritten += diff;
 				f->files[i].modified_at = modified_at;
-				//fprintf(stderr, "%s was changed make another copy:%i\n", f->files[i].pathOriginal, diff);
 			}
 		}
 		count--;
@@ -161,7 +160,6 @@ uint64_t copyFile(const char *cwd, const  char *saveTo, const usb_t * u)
 		return 0;
 	}
 
-
 	FILE *fp = fopen(cwd, "rb");
 	if(!fp)
 	{
@@ -169,7 +167,6 @@ uint64_t copyFile(const char *cwd, const  char *saveTo, const usb_t * u)
 		return 0;
 	}
 
-		
 	FILE *fp_out = fopen(saveTo, "wb");
 	if(!fp_out)
 	{
