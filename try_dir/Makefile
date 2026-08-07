@@ -28,12 +28,15 @@ $(BIN): $(OBJ)
 -include $(DEP)
 
 run: $(BIN)
+	rm -rf /mnt/usb/copied
 	./$(BIN) $(ARGS)
 
 clean: 
+	rm -r /mnt/usb/coped
 	$(RM) -r $(BUILD_DIR) bin
 		
 gdb:
+	rm -r /mnt/usb/copied
 	gdb -iex "set debuginfod enabled off" ./$(BIN)
 
 valg: 

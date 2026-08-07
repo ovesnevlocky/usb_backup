@@ -68,7 +68,7 @@ void checkFiles(usb_t *f, const uint32_t period, idxPool_t *p)
 	if(f->count != p->count)
 		fprintf(stderr, "counts dont agree . ... p: %lu, u: %lu\n", p->count, f->count);
 
-	for(size_t i = 0; i < p->count && count > 0 ; i++)
+	for(size_t i = 0;  count > 0 ; i++)
 	{
 		
 		if(p->idxInUse[i] == false)

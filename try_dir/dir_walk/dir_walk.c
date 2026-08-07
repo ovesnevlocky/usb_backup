@@ -103,7 +103,13 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPoo
 						p->idxInUse[idx] = true;
 					else
 						fprintf(stderr, "this idx:%i is in use...\n", idx);
-					
+				
+					if(isNull(list->files[idx].pathOriginal) == false)
+					{
+						fprintf(stderr, "this slot %i is in use!!\n",idx);
+
+					}
+		
 					list->files[idx].pathUsb = cpyPath(saveTo);
 					list->files[idx].modified_at = modified_at;
 					list->files[idx].pathOriginal = cpyPath(cwd);
