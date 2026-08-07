@@ -42,7 +42,7 @@ void startBackUp(usb_t *f, char *cwd, char *usbHome, idxPool_t *p)
 		}
 
 		sleep(period);
-		if(count_ > 3)
+		if(count_ > 1)
 			return;
 	}
 
@@ -145,7 +145,7 @@ bool isAlreadyCopied(char *pathUsb)
 	if(fp)
 	{
 		fprintf(stderr, "given file is already copied to usb, skip\n");
-		return true;	
+		return fclose(fp) == 0;	
 	}
 	return false;
 }

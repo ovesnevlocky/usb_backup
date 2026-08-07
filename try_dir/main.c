@@ -43,7 +43,7 @@ int main(void)
 
 	startBackUp(&f, cwd, "/mnt/usb/copied", &pool);
 
-	freedata(&f);
+	freedata(&f, &pool);
 
 	return 0;
 }
