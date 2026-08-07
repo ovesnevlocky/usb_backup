@@ -6,15 +6,26 @@
 #include <stdio.h>
 #include <string.h>
 
-void freedata(usb_t *f)
+void freedata(usb_t *f, idxPool_t *p)
 {
-	for(size_t i = 0; i < f->count; i++)
+	uint32_t count = p->count;
+	int idx = 0;
+	while(count > 0)
 	{
-		free(f->files[i].pathOriginal);
-		free(f->files[i].pathUsb);
+		if(p->idxInUse[idx] == true)
+		{
+					
+			free(f->files[idx].pathOriginal);
+			free(f->files[idx].pathUsb);
 
-		f->files[i].pathOriginal = NULL;
-		f->files[i].pathUsb = NULL;
+			f->files[idx].pathOriginal = NULL;
+			f->files[idx].pathUsb = NULL;
+		
+			count--;
+		
+		}
+
+		idx++;
 	}
 
 	free(f->files);

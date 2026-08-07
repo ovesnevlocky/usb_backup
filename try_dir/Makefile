@@ -40,4 +40,5 @@ gdb:
 	gdb -iex "set debuginfod enabled off" ./$(BIN)
 
 valg: 
+	rm -r /mnt/usb/copied
 	valgrind ./$(BIN)

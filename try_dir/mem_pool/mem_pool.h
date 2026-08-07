@@ -19,7 +19,7 @@ typedef struct
 }idxPool_t;
 
 
-void freedata(usb_t *f);
+void freedata(usb_t *f, idxPool_t *p);
 
 bool isAboveLimit(uint64_t byteRead, uint64_t limit, uint64_t currByte);
 void *myRealloc(void *old, size_t newSize);

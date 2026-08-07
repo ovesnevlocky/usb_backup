@@ -42,8 +42,8 @@ void startBackUp(usb_t *f, char *cwd, char *usbHome, idxPool_t *p)
 		}
 
 		sleep(period);
-		//if(count_ > 3)
-		//	return;
+		if(count_ > 3)
+			return;
 	}
 
 }
