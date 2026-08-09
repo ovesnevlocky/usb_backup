@@ -19,12 +19,12 @@
 #include "./dir_walk/dir_walk.h"
 #include "./backup/backup.h"
 #include "./mkdir/my_mkdir.h"
-
+#include <string.h>
 
 int main(void)
 {
 	char cwd[PATH_MAX] = {0};
-	char *path = "/home/kazuy/ws/usb/try_dir/testdir";
+	char *path = "/home/kazuy/ws/usb";
 	setHome(cwd, path);	
 
 	usb_t f;
@@ -39,11 +39,15 @@ int main(void)
 	if(check == EFAULT)
 			exit(EXIT_FAILURE);
 	
-	openDir(cwd, " ", &f,ONEDAY, &pool);
+	openDir(cwd, " ", &f,ONEWEEK * 6, &pool);
 
+	memset(cwd, 0, PATH_MAX);
+	setHome(cwd, path);
 	startBackUp(&f, cwd, "/mnt/usb/copied", &pool);
 
 	freedata(&f, &pool);
+	
+	stackFree(&pool.idxAvailable);
 
 	return 0;
 }

@@ -24,11 +24,12 @@ time_t isModifiedWithinPeriod(time_t lastModified, const uint32_t period)
 time_t getStat(char *path, const uint32_t period)
 {
 	struct stat sb;
-	
+	errno = 0;	
     	if (lstat(path, &sb) == -1)	
        	{
         	perror("lstat");
-        	return errno;
+		//return 0 to indicate error
+		return 0;
     	}
 
 	 return isModifiedWithinPeriod(sb.st_mtime, period);

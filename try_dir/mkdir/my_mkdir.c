@@ -10,16 +10,13 @@
 
 int makedir(const char *dir, const uint32_t mode)
 {
+	errno = 0;
 	int check = mkdir(dir , mode);
-	if(!check)
+	//if already exists, its ok
+	if(check == 0)
 	{
-		printf("Directory created at %s\n", dir);
 		return check;
 	}
-	else
-	{
-		//perror("mkdir");
-		return errno;
-	}
+
 	return check;
 }

@@ -34,7 +34,6 @@ bool isNull(const void *a)
 	//change back to the string before concating//
 void cleanDirTo(char *cwd)
 {
-	//size_t lenDirTo = isNull(dir_to) ? 0 : strlen(dir_to);
 	size_t idx = strlen(cwd) - 1 ;
 
 	while(idx > 0 && cwd[idx] !='/')
@@ -60,7 +59,6 @@ bool isInSameDir(const char *cwdUsb,const char * dir_to)
 	return strncmp(cwdUsb + lenU - len, dir_to, len ) == 0;
 	
 }
-
 
 
 void concat(char *dst, const char *dir_to)

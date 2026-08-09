@@ -10,7 +10,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include "../path_utils/path_utils.h"
-
+#include "../stack/stack.h"
 
 bool usbInit(usb_t *u)
 {
@@ -21,7 +21,7 @@ bool usbInit(usb_t *u)
 		return false;
 	}
 	u->byteWritten = 0;
-	u->capacity = 100;
+	u->capacity = MAX_SIZE;
 	u->count = 0;
 	setHome(u->cwdUsb, "/mnt/usb/copied");	
 	u->files =  calloc(sizeof(file_t),  u->capacity);

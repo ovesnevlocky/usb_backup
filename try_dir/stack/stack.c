@@ -2,21 +2,45 @@
 
 #include "stack.h"
 #include <string.h>
+#include <stdlib.h>
+
+
 void hellostack(void)
 {
 	printf("helo from stack\n");
+}
+
+bool stackRealloc(Stack *s)
+{
+	s->capacity *= 2;
+	void *tmp = realloc(s->arr, s->capacity * sizeof(int));
+	if(!tmp)
+	{
+		return false;
+	}
+
+	s->arr = tmp;
+	return true;
+}
+
+void stackFree(Stack *s)
+{
+	free(s->arr);
+	s->arr = NULL;
 }
 
 void stackInit(Stack *s)
 {
 	s->top = -1;
 	s->count = 0;
-	memset(s->arr, -1, sizeof(int) * MAX_SIZE);
+	s->capacity = MAX_SIZE;
+	s->arr = malloc(sizeof(int) * MAX_SIZE);
 }
+
 
 bool isStackFull(Stack *s)
 {
-	return s->count >= MAX_SIZE;
+	return s->count >= s->  capacity;
 }
 
 bool isStackEmpty(Stack *s)
@@ -28,7 +52,7 @@ bool stackPush(Stack *s, int a)
 {
 	if(isStackFull(s))
 	{
-		printf("stack is full MAX: %i, current %i\n", MAX_SIZE, s->count);
+		fprintf(stderr, "stack is full MAX:current %lu\n", s->count);
 		return false;
 	}
 	

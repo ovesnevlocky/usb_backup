@@ -1,15 +1,17 @@
 #ifndef STACK_H_
 #define STACK_H_
 
-#define MAX_SIZE 100
+#define MAX_SIZE 2 
 #include <stdbool.h>
+#include <stdlib.h>
 
 
 typedef struct
 {
-	int arr[MAX_SIZE];
+	int *arr;
 	int top;
-	int count;
+	size_t  count;
+	size_t capacity;
 }Stack;
 
 void stackInit(Stack *s);
@@ -27,4 +29,7 @@ void hellostack(void);
 
 void stackPrint(const Stack s);
 
+bool stackRealloc(Stack *s);
+
+void stackFree(Stack *s);
 #endif

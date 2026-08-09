@@ -13,9 +13,9 @@
 typedef struct
 {
 	Stack idxAvailable;
-	bool idxInUse[MAX_SIZE];
+	bool *idxInUse;
 	size_t count;
-
+	
 }idxPool_t;
 
 
@@ -25,6 +25,8 @@ bool isAboveLimit(uint64_t byteRead, uint64_t limit, uint64_t currByte);
 void *myRealloc(void *old, size_t newSize);
 
 uint64_t getAvailability(const char *path);
+
+void pushFreeIdx(idxPool_t *p, uint16_t idxs, uint16_t offset);
 
 void idxPoolInit(idxPool_t *p, uint16_t capacityUsb );
 #endif

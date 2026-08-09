@@ -22,13 +22,17 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPoo
 {
 	concat(cwd, dir_to);
 
+
 	time_t modified_at = getStat(cwd, period);
 	if(modified_at)
 	{
 		concat(list->cwdUsb, dir_to);
+		errno = 0;
 		int ret = makedir(list->cwdUsb, 0777);
-		if(!ret)
+		if(ret != 0)
+		{
 			perror("mkdir");
+		}
 	
 	}
 
@@ -74,7 +78,11 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPoo
 				if(list->count >= list->capacity)
 				{
 					list->capacity *= 2;
-					myRealloc(list->files, list->capacity * sizeof(file_t));
+					void *tmp = myRealloc(list->files, list->capacity * sizeof(file_t));
+					if(tmp)
+						list->files = tmp;
+					else
+						perror("realloc");
 
 				}
 				fprintf(stderr, "%s was newly modified\n", cwd);
@@ -86,7 +94,6 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPoo
 				if(isAlreadyCopied(saveTo) == true)
 				{
 					//fprintf(stderr, "%s is already in usb\n", saveTo);
-					
 					//make sure to clean the cwd
 					cleanDirTo(cwd);
 					continue;
@@ -95,9 +102,25 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPoo
 				uint64_t byteWritten = copyFile(cwd, saveTo, list);
 				if(byteWritten)
 				{
+					//make sure theres valid idx before popping	
+					if(isStackEmpty(&p->idxAvailable))
+					{
+						uint16_t oldC = p->idxAvailable.capacity;
+						stackRealloc(&p->idxAvailable);
+						uint16_t offset = p->idxAvailable.capacity - oldC;
+						errno = 0;
+						void *tmp = myRealloc(p->idxInUse, p->idxAvailable.capacity);
+						if(tmp)
+							p->idxInUse = tmp;
+						else 
+							perror("realloc");
+
+						//at this point, new capacity is in p
+						pushFreeIdx(p, p->idxAvailable.capacity, offset);
+					}
+
 					//pop an available idx from stack 
 					int idx = stackPop(&p->idxAvailable);
-
 					//mark as being used
 					if(p->idxInUse[idx] == false)
 						p->idxInUse[idx] = true;

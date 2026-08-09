@@ -20,14 +20,14 @@ void freedata(usb_t *f, idxPool_t *p)
 
 			f->files[idx].pathOriginal = NULL;
 			f->files[idx].pathUsb = NULL;
-		
 			count--;
-		
 		}
 
 		idx++;
 	}
 
+	free(p->idxInUse);
+	p->idxInUse = NULL;
 	free(f->files);
 	f->files = NULL;
 }
@@ -46,17 +46,33 @@ void *myRealloc(void *old, size_t newSize)
 }
 
 
+void pushFreeIdx(idxPool_t *p, uint16_t idxs, uint16_t offset)
+{
+
+	while(offset > 0)
+	{
+		stackPush(&p->idxAvailable, (int)idxs - 1);
+		p->idxInUse[idxs - 1] = false;
+		idxs--;
+		offset--;
+	}
+
+	return;	
+
+}
+
 void idxPoolInit(idxPool_t *p, uint16_t capacityUsb)
 {
 	stackInit(&p->idxAvailable);
-	memset(p->idxInUse, false, MAX_SIZE * sizeof(bool));
+	p->idxInUse = malloc(MAX_SIZE * sizeof(bool));
+	if(!p->idxInUse)
+	{
+		perror("malloc");
+		return;
+	}
 	p->count = 0;
 	//push from 99 as that is kind of natural i guess.. doesnt really matter	
-	while(capacityUsb > 0)
-	{
-		stackPush(&p->idxAvailable,  (int)capacityUsb - 1);	
-		capacityUsb--;	
-	}
+	pushFreeIdx(p, capacityUsb, capacityUsb);
 
 	return;
 }

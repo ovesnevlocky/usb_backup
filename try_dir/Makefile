@@ -1,5 +1,5 @@
 C = cc
-CFLAGS = -g
+CFLAGS = -g -Wall -Werror -Wpedantic -Wformat=2
 RM = rm -f
 BIN = bin/main
 BUILD_DIR = build
@@ -32,13 +32,13 @@ run: $(BIN)
 	./$(BIN) $(ARGS)
 
 clean: 
-	rm -r /mnt/usb/coped
+	rm -rf /mnt/usb/coped
 	$(RM) -r $(BUILD_DIR) bin
 		
 gdb:
-	rm -r /mnt/usb/copied
+	rm -rf /mnt/usb/copied
 	gdb -iex "set debuginfod enabled off" ./$(BIN)
 
 valg: 
-	rm -r /mnt/usb/copied
+	rm -rf /mnt/usb/copied
 	valgrind ./$(BIN)
