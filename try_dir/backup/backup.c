@@ -16,6 +16,7 @@ bool removeFile(const char *path)
     	return remove(path) == 0;
 }
 
+
 void startBackUp(usb_t *f, const char *cwdHome, char *usbHome, idxPool_t *p)
 {
 	uint32_t period = ONEMIN/10;
@@ -25,11 +26,10 @@ void startBackUp(usb_t *f, const char *cwdHome, char *usbHome, idxPool_t *p)
 	int count_ = 0;	
 	char cwd[PATH_MAX] = {0};
 
-	while(true)
+	while(true && isUsbMounted())
 	{
 		checkFiles(f, period, p);
 		count++;
-
 		//again check directories//
 		if(count > 2)
 		{
@@ -43,7 +43,7 @@ void startBackUp(usb_t *f, const char *cwdHome, char *usbHome, idxPool_t *p)
 		}
 
 		sleep(period);
-		if(count_ > 1)
+		if(count_ > 7)
 			return;
 	}
 
@@ -123,7 +123,6 @@ void checkFiles(usb_t *f, const uint32_t period, idxPool_t *p)
 			
 			}
 			stackPush(&p->idxAvailable,  (int)f->files[i].idx);
-
 			//setfalse
 			p->idxInUse[f->files[i].idx] = false;
 		}
@@ -134,13 +133,10 @@ void checkFiles(usb_t *f, const uint32_t period, idxPool_t *p)
 			if(bytesWritten)
 			{
 				int64_t diff = (int64_t) bytesWritten - (int64_t) f->files[i].size;
-				
                 		int64_t newSize = (int64_t)f->files[i].size + diff;
                 		int64_t newByteWritten = (int64_t)f->byteWritten + diff;
-
                 		f->files[i].size = (uint64_t)newSize;
                 		f->byteWritten = (uint64_t)newByteWritten;
-
 				f->files[i].modified_at = modified_at;
 			}
 		}

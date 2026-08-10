@@ -13,14 +13,25 @@
 #include "../stack/stack.h"
 #include <string.h>
 
-bool usbInit(usb_t *u)
+
+bool isUsbMounted()
 {
+
+
 	struct statvfs vfs;
 	if(statvfs("/mnt/usb", &vfs) == -1)
 	{
 		perror("statvfs");
 		return false;
 	}
+	return true;
+
+}
+
+bool usbInit(usb_t *u)
+{
+	if(!isUsbMounted())
+		return false;
 	u->byteWritten = 0;
 	u->capacity = MAX_SIZE;
 	u->count = 0;

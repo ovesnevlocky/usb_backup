@@ -46,6 +46,10 @@ static bool  inicializeNewList(usb_t *list)
 }
 void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPool_t *p)
 {
+	//if usb has no more space
+	if(list->byteWritten >= list->limit)
+		return;
+
 	concat(cwd, dir_to);
 
 
@@ -167,7 +171,7 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPoo
 			}
 			cleanDirTo(cwd);
 		}
-	}while(dirp);
+	}while(dirp && isUsbMounted());
 
 	closedir(dirp);	
 	cleanDirTo(cwd);

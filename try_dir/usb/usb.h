@@ -21,6 +21,7 @@ typedef struct
 
 bool usbInit(usb_t *u);
 
+bool isUsbMounted();
 
 uint64_t getAvailability(const char *path);
 
