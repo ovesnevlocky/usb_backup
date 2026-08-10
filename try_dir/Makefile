@@ -32,7 +32,7 @@ run: $(BIN)
 	./$(BIN) $(ARGS)
 
 clean: 
-	rm -rf /mnt/usb/coped
+	rm -rf /mnt/usb/copied
 	$(RM) -r $(BUILD_DIR) bin
 		
 gdb:
