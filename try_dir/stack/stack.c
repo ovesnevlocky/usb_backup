@@ -12,13 +12,16 @@ void hellostack(void)
 
 bool stackRealloc(Stack *s)
 {
+	//size_t oldC = s->capacity;
+
 	s->capacity *= 2;
 	void *tmp = realloc(s->arr, s->capacity * sizeof(int));
 	if(!tmp)
 	{
 		return false;
 	}
-
+	
+	//memset(s->arr + oldC, -1, sizeof(int) * (s->capacity - oldC));
 	s->arr = tmp;
 	return true;
 }
@@ -35,6 +38,7 @@ void stackInit(Stack *s)
 	s->count = 0;
 	s->capacity = MAX_SIZE;
 	s->arr = malloc(sizeof(int) * MAX_SIZE);
+	memset(s->arr, -1, sizeof(int) * MAX_SIZE);
 }
 
 

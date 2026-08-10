@@ -10,7 +10,6 @@
 #include "../dir_walk/dir_walk.h"
 #include <unistd.h>
 
-
 bool removeFile(const char *path)
 {
 	fprintf(stderr, "deleting %s\n", path);
@@ -49,7 +48,6 @@ void startBackUp(usb_t *f, const char *cwdHome, char *usbHome, idxPool_t *p)
 	}
 
 }
-
 
 void printCheck(const char *path1, const char *path2)
 {

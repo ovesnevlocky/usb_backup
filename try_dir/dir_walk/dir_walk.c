@@ -118,7 +118,6 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPoo
 						//at this point, new capacity is in p
 						pushFreeIdx(p, p->idxAvailable.capacity, offset);
 					}
-
 					//pop an available idx from stack 
 					int idx = stackPop(&p->idxAvailable);
 					//mark as being used

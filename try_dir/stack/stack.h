@@ -1,7 +1,7 @@
 #ifndef STACK_H_
 #define STACK_H_
 
-#define MAX_SIZE 2 
+#define MAX_SIZE 10
 #include <stdbool.h>
 #include <stdlib.h>
 
