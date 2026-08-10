@@ -18,6 +18,32 @@
 
 #include <string.h>
 
+static bool  inicializeNewList(usb_t *list)
+{
+
+	size_t oldC = list->capacity;
+	list->capacity *= 2;
+	void *tmp = myRealloc(list->files, list->capacity * sizeof(file_t));
+	if(tmp)
+	{
+		list->files = tmp;
+		while(oldC < list->capacity)
+		{
+			list->files[oldC].pathOriginal = NULL;
+			list->files[oldC].pathUsb = NULL;
+			list->files[oldC].idx = -1;
+			oldC++;
+		}	
+	}
+	else
+	{
+		perror("realloc");
+		return false;
+	}
+
+	return true;
+
+}
 void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPool_t *p)
 {
 	concat(cwd, dir_to);
@@ -77,12 +103,8 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPoo
 			{
 				if(list->count >= list->capacity)
 				{
-					list->capacity *= 2;
-					void *tmp = myRealloc(list->files, list->capacity * sizeof(file_t));
-					if(tmp)
-						list->files = tmp;
-					else
-						perror("realloc");
+					if(!inicializeNewList(list))
+						fprintf(stderr, "failto realloc\n");	
 
 				}
 				fprintf(stderr, "%s was newly modified\n", cwd);
@@ -93,7 +115,6 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPoo
 				//dont want to make another copy if already copied
 				if(isAlreadyCopied(saveTo) == true)
 				{
-					//fprintf(stderr, "%s is already in usb\n", saveTo);
 					//make sure to clean the cwd
 					cleanDirTo(cwd);
 					continue;

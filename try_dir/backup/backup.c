@@ -186,7 +186,7 @@ uint64_t copyFile(const char *cwd, const  char *saveTo, const usb_t * u)
 		return 0;
 	}
 
-	size_t byteWritten, byteRead;
+	size_t byteWritten = 0, byteRead = 0;
 	do
 	{
 		char buff[4096] = {0};

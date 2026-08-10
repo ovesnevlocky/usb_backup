@@ -41,4 +41,4 @@ gdb:
 
 valg: 
 	rm -rf /mnt/usb/copied
-	valgrind ./$(BIN)
+	valgrind --track-origins=yes  ./$(BIN)
