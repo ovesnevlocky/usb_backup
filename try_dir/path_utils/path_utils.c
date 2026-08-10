@@ -56,6 +56,11 @@ bool isInSameDir(const char *cwdUsb,const char * dir_to)
 	size_t len = strlen(dir_to);
 	size_t lenU = strlen(cwdUsb);
 
+	//dir_to should be shorter as this is just fname//
+	if(len > lenU)
+		return false;
+	
+	//fprintf(stderr, "%s, %s,  %s\n", cwdUsb, cwdUsb + lenU-len, dir_to);
 	return strncmp(cwdUsb + lenU - len, dir_to, len ) == 0;
 	
 }
