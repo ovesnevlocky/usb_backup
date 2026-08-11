@@ -130,18 +130,21 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPoo
 					//make sure theres valid idx before popping	
 					if(isStackEmpty(&p->idxAvailable))
 					{
-						uint16_t oldC = p->idxAvailable.capacity;
-						stackRealloc(&p->idxAvailable);
-						uint16_t offset = p->idxAvailable.capacity - oldC;
-						errno = 0;
-						void *tmp = myRealloc(p->idxInUse, p->idxAvailable.capacity);
-						if(tmp)
-							p->idxInUse = tmp;
-						else 
-							perror("realloc");
+					//	uint16_t oldC = p->idxAvailable.capacity;
+					//	stackRealloc(&p->idxAvailable);
+					//	uint16_t offset = p->idxAvailable.capacity - oldC;
+					//	errno = 0;
+					//	void *tmp = myRealloc(p->idxInUse, p->idxAvailable.capacity);
+					//	if(tmp)
+					//		p->idxInUse = tmp;
+					//	else 
+					//		perror("realloc");
 
 						//at this point, new capacity is in p
-						pushFreeIdx(p, p->idxAvailable.capacity, offset);
+					//	pushFreeIdx(p, p->idxAvailable.capacity, offset);
+						int ret = enlargePool(p);
+						if(ret != 0)
+							fprintf(stderr, "enlargePool retuned %i\n", ret);
 					}
 					//pop an available idx from stack 
 					int idx = stackPop(&p->idxAvailable);

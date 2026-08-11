@@ -181,7 +181,8 @@ uint64_t copyFile(const char *cwd, const  char *saveTo, const usb_t * u)
 		perror(cwd);
 		return 0;
 	}
-
+	
+	size_t bytesWritten = 0;
 	size_t byteWritten = 0, byteRead = 0;
 	do
 	{
@@ -190,7 +191,7 @@ uint64_t copyFile(const char *cwd, const  char *saveTo, const usb_t * u)
 		if(byteRead <= 0)
 			break;
 	
-		if(isAboveLimit(byteRead, u->limit, u->byteWritten))
+		if(isAboveLimit(byteRead + bytesWritten , u->limit, u->byteWritten))
 		{
 			fprintf(stderr, "toomuch data at copyFile\n");
 			fclose(fp_out);
@@ -208,13 +209,13 @@ uint64_t copyFile(const char *cwd, const  char *saveTo, const usb_t * u)
 			return 0;
 		}
 
+		bytesWritten += byteWritten;
+
 	}while(byteRead && fp && fp_out);
 
 	fclose(fp_out);
 	fclose(fp);
-	return byteWritten;
+	return bytesWritten;
 }
-
-
 
 

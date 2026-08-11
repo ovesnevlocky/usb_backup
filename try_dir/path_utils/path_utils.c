@@ -75,6 +75,7 @@ int cleanDirTo(char *cwd)
 	return ret;
 }
 
+//inspired by Boyer-Moore algs
 bool myStrCmp(const char *path, const char *fname)
 {
 

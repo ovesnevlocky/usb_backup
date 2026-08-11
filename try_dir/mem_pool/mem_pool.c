@@ -1,4 +1,5 @@
 #include "mem_pool.h"
+#include <errno.h>
 
 #include "../stack/stack.h"
 #include "../usb/usb.h"
@@ -45,7 +46,7 @@ void *myRealloc(void *old, size_t newSize)
 	return new;
 }
 
-
+//push from 'idxs' to 'offset' 
 void pushFreeIdx(idxPool_t *p, uint16_t idxs, uint16_t offset)
 {
 
@@ -80,4 +81,27 @@ void idxPoolInit(idxPool_t *p, uint16_t capacityUsb)
 bool isAboveLimit(uint64_t byteRead, uint64_t limit, uint64_t currByte)
 {
 	return byteRead + currByte >= limit;
+}
+
+
+
+int  enlargePool(idxPool_t *p)
+{
+	errno = 0;
+
+	uint16_t oldC = p->idxAvailable.capacity;
+
+	stackRealloc(&p->idxAvailable);
+	uint16_t offset = p->idxAvailable.capacity - oldC;
+
+	bool *tmp = myRealloc(p->idxInUse, p->idxAvailable.capacity);
+	if(tmp)
+		p->idxInUse = tmp;
+	else 
+		perror("realloc");
+
+	pushFreeIdx(p, p->idxAvailable.capacity, offset);
+
+	return 0;
+
 }

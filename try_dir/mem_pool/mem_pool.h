@@ -29,4 +29,6 @@ uint64_t getAvailability(const char *path);
 void pushFreeIdx(idxPool_t *p, uint16_t idxs, uint16_t offset);
 
 void idxPoolInit(idxPool_t *p, uint16_t capacityUsb );
+
+int  enlargePool(idxPool_t *p);
 #endif
