@@ -9,6 +9,14 @@
 #include "../mem_pool/mem_pool.h"
 #include "../dir_walk/dir_walk.h"
 #include <unistd.h>
+#include <assert.h>
+
+
+static inline bool isLessThanZero(int64_t a)
+{
+	return a < 0;
+
+}
 
 bool removeFile(const char *path)
 {
@@ -65,6 +73,7 @@ void checkFiles(usb_t *f, const uint32_t period, idxPool_t *p)
 	size_t count = f->count;	
 	fprintf(stderr, "----------------------------\n");	
 
+
 	if(f->count != p->count)
 		fprintf(stderr, "counts dont agree . ... p: %lu, u: %lu\n", p->count, f->count);
 
@@ -84,9 +93,7 @@ void checkFiles(usb_t *f, const uint32_t period, idxPool_t *p)
 				printCheck(f->files[i].pathOriginal, f->files[i].pathUsb);
 				continue;
 			}
-
 		}
-
 
 		errno = 0;
 		time_t modified_at = getStat(f->files[i].pathOriginal, period);
@@ -107,21 +114,21 @@ void checkFiles(usb_t *f, const uint32_t period, idxPool_t *p)
 			f->files[i].pathUsb = NULL;
 			p->count -= 1;
 			f->count -= 1;
+
 			//subtract 
-			f->byteWritten -= f->files[i].size;
+			int64_t newSize  = (int64_t) f->byteWritten - (int64_t) f->files[i].size;
+			if(isLessThanZero(newSize))
+				newSize = 0;
+			f->byteWritten = (uint64_t) newSize;
+			
 			//push the freed idx;
 			if(isStackFull(&p->idxAvailable))
 			{
-			
-				uint16_t  oldC = p->idxAvailable.capacity;
-				
-				stackRealloc(&p->idxAvailable);
-				uint16_t offset = p->idxAvailable.capacity - oldC;
-				fprintf(stderr, "cap: %lu, oldC: %i, offset%i\n",
-					       	p->idxAvailable.capacity, oldC, offset);
-				pushFreeIdx(p, p->idxAvailable.capacity, offset);
-			
+				int ret = enlargePool(p);
+				if(ret != 0)
+					fprintf(stderr, "error at engargepool at checkFiles\n");
 			}
+
 			stackPush(&p->idxAvailable,  (int)f->files[i].idx);
 			//setfalse
 			p->idxInUse[f->files[i].idx] = false;
@@ -132,11 +139,20 @@ void checkFiles(usb_t *f, const uint32_t period, idxPool_t *p)
 			uint64_t bytesWritten = copyFile(f->files[i].pathOriginal, f->files[i].pathUsb, f);
 			if(bytesWritten)
 			{
+				//diff of the 2 same files
 				int64_t diff = (int64_t) bytesWritten - (int64_t) f->files[i].size;
-                		int64_t newSize = (int64_t)f->files[i].size + diff;
+
+				//compute new byteWritten of entire files//
                 		int64_t newByteWritten = (int64_t)f->byteWritten + diff;
-                		f->files[i].size = (uint64_t)newSize;
-                		f->byteWritten = (uint64_t)newByteWritten;
+			
+				if(newByteWritten < 0)
+					newByteWritten = 0;
+
+                		f->files[i].size = bytesWritten;
+					
+                		f->byteWritten = newByteWritten;
+				
+				//renew the modified time
 				f->files[i].modified_at = modified_at;
 			}
 		}
