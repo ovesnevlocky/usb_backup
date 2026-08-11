@@ -1,8 +1,10 @@
 C = cc
-CFLAGS = -g -Wall -Werror -Wpedantic -Wformat=2
+CFLAGS = -g -Wall -Werror -Wpedantic -Wformat=2 -I.
 RM = rm -f
 BIN = bin/main
 BUILD_DIR = build
+SAN = -g -fno-omit-frame-pointer -fsanitize=address,undefined
+
 
 SRC = $(wildcard *.c)\
 $(wildcard ./stack/*.c) \
@@ -26,6 +28,11 @@ $(BIN): $(OBJ)
 	$(CC) $(CFLAGS) $^ -o $@
 
 -include $(DEP)
+
+asan: $(OBJ)
+	rm -rf /mnt/usb/copied
+	$(CC) $(CFLAGS) $(SAN) -O1 $^ -o usb_backup_asan
+	ASAN_OPTIONS=abort_on_error=1:detect_stack_use_after_return=1 ./usb_backup_asan
 
 run: $(BIN)
 	rm -rf /mnt/usb/copied

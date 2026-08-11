@@ -44,6 +44,7 @@ static bool  inicializeNewList(usb_t *list)
 	return true;
 
 }
+
 void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPool_t *p)
 {
 	//if usb has no more space
@@ -102,78 +103,65 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPoo
 				continue;
 
 			concat(cwd, dp->d_name);
+
 			time_t Fmodified_at = getStat(cwd, period);
-			if(Fmodified_at)
+			char saveTo[PATH_MAX] = {0};
+
+			memcpy(saveTo, list->cwdUsb, strlen(list->cwdUsb) + 1);
+			concat(saveTo, dp->d_name);
+
+			//dont wanto make another copy if already copied,
+			//or if not modifed  within given period
+			if(isAlreadyCopied(saveTo) == true||
+				Fmodified_at == 0)
 			{
-				if(list->count >= list->capacity)
-				{
-					if(!inicializeNewList(list))
-						fprintf(stderr, "failto realloc\n");	
-
-				}
-				fprintf(stderr, "%s was newly modified\n", cwd);
-				char saveTo[PATH_MAX] = {0};
-				memcpy(saveTo, list->cwdUsb, strlen(list->cwdUsb) + 1);
-				concat(saveTo, dp->d_name);
-
-				//dont want to make another copy if already copied
-				if(isAlreadyCopied(saveTo) == true)
-				{
-					//make sure to clean the cwd
-					cleanDirTo(cwd);
-					continue;
-				}
-
-				uint64_t byteWritten = copyFile(cwd, saveTo, list);
-				if(byteWritten)
-				{
-					//make sure theres valid idx before popping	
-					if(isStackEmpty(&p->idxAvailable))
-					{
-					//	uint16_t oldC = p->idxAvailable.capacity;
-					//	stackRealloc(&p->idxAvailable);
-					//	uint16_t offset = p->idxAvailable.capacity - oldC;
-					//	errno = 0;
-					//	void *tmp = myRealloc(p->idxInUse, p->idxAvailable.capacity);
-					//	if(tmp)
-					//		p->idxInUse = tmp;
-					//	else 
-					//		perror("realloc");
-
-						//at this point, new capacity is in p
-					//	pushFreeIdx(p, p->idxAvailable.capacity, offset);
-						int ret = enlargePool(p);
-						if(ret != 0)
-							fprintf(stderr, "enlargePool retuned %i\n", ret);
-					}
-					//pop an available idx from stack 
-					int idx = stackPop(&p->idxAvailable);
-					//mark as being used
-					if(p->idxInUse[idx] == false)
-						p->idxInUse[idx] = true;
-					else
-						fprintf(stderr, "this idx:%i is in use...\n", idx);
-				
-					if(isNull(list->files[idx].pathOriginal) == false)
-					{
-						fprintf(stderr, "this slot %i is in use!!\n",idx);
-
-					}
-		
-					list->files[idx].pathUsb = cpyPath(saveTo);
-					list->files[idx].modified_at = modified_at;
-					list->files[idx].pathOriginal = cpyPath(cwd);
-					list->files[idx].size = byteWritten;
-					//assign the popped idx
-					list->files[idx].idx = idx;
-					list->byteWritten += byteWritten;
-					list->count += 1;
-					p->count += 1;
-
-				}
+				cleanDirTo(cwd);
+				continue;
 			}
+
+			fprintf(stderr, "%s was newly modified\n", cwd);
+			if(list->count >= list->capacity)
+			{
+				if(!inicializeNewList(list))
+					fprintf(stderr, "failto realloc\n");	
+
+			}
+
+			uint64_t byteWritten = copyFile(cwd, saveTo, list);
+			if(byteWritten == 0)
+			{
+				cleanDirTo(cwd);
+				continue;
+			}
+			//make sure theres valid idx before popping	
+			if(isStackEmpty(&p->idxAvailable))
+			{
+				int ret = enlargePool(p);
+				if(ret != 0)
+					fprintf(stderr, "enlargePool retuned %i\n", ret);
+			}
+			//pop an available idx from stack 
+			int idx = stackPop(&p->idxAvailable);
+			//mark as being used
+			if(p->idxInUse[idx] == false)
+				p->idxInUse[idx] = true;
+			else
+				fprintf(stderr, "this idx:%i is in use...\n", idx);
+			
+			list->files[idx].pathUsb = cpyPath(saveTo);
+			list->files[idx].modified_at = Fmodified_at;
+			list->files[idx].pathOriginal = cpyPath(cwd);
+			list->files[idx].size = byteWritten;
+			//assign the popped idx
+			list->files[idx].idx = idx;
+			list->byteWritten += byteWritten;
+			list->count += 1;
+			p->count += 1;
+
+
 			cleanDirTo(cwd);
 		}
+
 	}while(dirp && isUsbMounted());
 
 	closedir(dirp);	
