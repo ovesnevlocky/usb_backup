@@ -5,19 +5,22 @@
 
 enum
 {
+	PATH_RELATIVE = 5,
+	PATH_ABSOLUTE, 
+	PATH_NULL = 8,
+
 	PATH_TOO_LONG = 10,
+	PATH_NO_SLASH_AT_START,
 
 
 };
 
 
-int isPathValid(const char *path);
+int isPathValid(const char *path, int mode);
 
 bool isNull(const void *a);
 
-
 int concat(char *dst, const char *dir_to);
-
 
 int cleanDirTo(char *dst);
 
@@ -33,7 +36,6 @@ bool myStrCmp(const char *path, const char *fname);
 bool isHidden(const char *d_name);
 
 bool isInSameDir(const char *cwdUsb,const char * dir_to);
-
 
 bool isInSameDir(const char *cwdUsb,const char * dir_to);
 

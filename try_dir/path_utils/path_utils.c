@@ -28,12 +28,21 @@ bool isHidden(const char *d_name)
 	return d_name[0] == '.';
 }
 
-int isPathValid(const char *path)
+int isPathValid(const char *path, int mode)
 {
+	if(isNull(path))
+		return PATH_NULL;
+
 	if(strlen(path) > PATH_MAX)
 	{
 		fprintf(stderr, "length is over PATH_MAX\n");
 		return PATH_TOO_LONG;
+	}
+
+	if(mode == PATH_ABSOLUTE && path[0] != '/')
+	{
+		fprintf(stderr, "absolute path has to begin with '/'\n");
+		return PATH_NO_SLASH_AT_START;
 	}
 
 	return 0;
@@ -57,33 +66,31 @@ int cleanDirTo(char *cwd)
 {
 	int ret = 0;
 
-	ret = isPathValid(cwd);
+	ret = isPathValid(cwd, PATH_ABSOLUTE);
 	if(ret != 0)
 		return ret;
+	
+	size_t idx = strlen(cwd);
 
-	size_t len = strlen(cwd);
-	size_t idx = len - 1;
-
-	while(idx > 0 && cwd[idx] !='/')
+	while(idx > 0 && cwd[idx - 1] !='/')
 	{
-		cwd[idx] = '\0';
+		cwd[idx - 1] = '\0';
 		idx--;
 	}
 
-	cwd[idx] = '\0';
+	cwd[idx - 1] = '\0';
 
 	return ret;
 }
 
-//inspired by Boyer-Moore algs
+//inspired by Boyer-Moore method 
 bool myStrCmp(const char *path, const char *fname)
 {
 
-	if(isNull(path) || isNull(fname))
+	if(isPathValid(path , PATH_ABSOLUTE) != 0 
+	|| isPathValid(fname, PATH_RELATIVE) != 0)
 		return false;
 
-	if(isPathValid(path) != 0 || isPathValid(fname) != 0)
-		return false;
 	size_t idx = strlen(path);
 	size_t idx2 = strlen(fname);
 
@@ -101,8 +108,7 @@ bool myStrCmp(const char *path, const char *fname)
 	}
 
 
-	if(path[idx - 1] == '/' && idx2 == 0)
-		return true;
+	if(path[idx - 1] == '/' && idx2 == 0) return true;
 
 	return false;
 
@@ -111,24 +117,19 @@ bool myStrCmp(const char *path, const char *fname)
 
 bool isInSameDir(const char *cwdUsb,const char * dir_to)
 {
-	if(isNull(cwdUsb) || isNull(dir_to))
-	{
-		fprintf(stderr, "%s is points to NULL at isInSameDir\n", 
-				cwdUsb == NULL ? "cwdUsb" : "dir_to" );
+
+	if(isPathValid(cwdUsb, PATH_ABSOLUTE) != 0 
+	|| isPathValid(dir_to, PATH_RELATIVE) != 0)
 		return false;
-	}
 
 	size_t len = strlen(dir_to);
 	size_t lenU = strlen(cwdUsb);
 
-	if(isPathValid(cwdUsb) != 0 || isPathValid(dir_to) != 0)
-		return false;
 
 	//dir_to should be shorter as this is just fname//
 	if(len > lenU)
 		return false;
 	
-	//fprintf(stderr, "%s, %s,  %s\n", cwdUsb, cwdUsb + lenU-len, dir_to);
 	//return strncmp(cwdUsb + lenU - len, dir_to, len ) == 0;
 	return myStrCmp(cwdUsb, dir_to);
 	
@@ -137,27 +138,21 @@ bool isInSameDir(const char *cwdUsb,const char * dir_to)
 
 int concat(char *dst, const char *dir_to)
 {
-	if(isNull(dst) || isNull(dir_to))
-	{
-		fprintf(stderr, "%s is points to NULL in concat\n", 
-				dst == NULL ? "dst" : "dir_to" );
-		return 0;
-	}
-	
 	//the first case
 	if(strcmp(dir_to, " ") == 0)
-	{
 		return 0;
-	}
 		
+	int ret = 0;
+
+	ret = isPathValid(dir_to, PATH_RELATIVE);
+	ret = isPathValid(dst, PATH_ABSOLUTE);
+
+	if(ret != 0)
+		return ret;
+
 	size_t len = strlen(dst);
 	size_t lenD = strlen(dir_to);
 	
-	int ret = 0;
-	ret = isPathValid(dir_to);
-	ret = isPathValid(dst);
-	if(ret != 0)
-		return ret;
 
 	dst[len] = '/';
 	memcpy(dst + len + 1, dir_to, lenD + 1);
@@ -168,27 +163,23 @@ int concat(char *dst, const char *dir_to)
 
 int  setHome(char *dst, const char *path)
 {
-	
-
 	int ret = 0;
-	ret = isPathValid(path);
-	ret = isPathValid(dst);
+
+	ret = isPathValid(path, PATH_ABSOLUTE);
+	ret = isPathValid(dst, PATH_RELATIVE);
+
 	if(ret != 0)
 		return ret;
 
 	memcpy(dst, path, strlen(path) + 1); 
-	return 0;
+	return ret;
 }
 
+//make sure to pass in only absolute path
 char *cpyPath(const char *path)
 {
-	if(isNull(path))
+	if(isPathValid(path, PATH_RELATIVE) != 0)
 		return NULL;
-
-	if(isPathValid(path) != 0)
-	{
-		return NULL;
-	}	
 
 	char *ret = malloc(sizeof(char) * (strlen(path) + 1));
 	memcpy(ret, path, strlen(path) + 1);

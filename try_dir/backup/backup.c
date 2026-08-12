@@ -10,13 +10,8 @@
 #include "../dir_walk/dir_walk.h"
 #include <unistd.h>
 #include <assert.h>
+#include <limits.h>
 
-
-static inline bool isLessThanZero(int64_t a)
-{
-	return a < 0;
-
-}
 
 bool removeFile(const char *path)
 {
@@ -79,7 +74,10 @@ void checkFiles(usb_t *f, const uint32_t period, idxPool_t *p)
 
 	for(size_t i = 0;  count > 0 ; i++)
 	{
-		
+	
+		if(i > INT_MAX)
+			break;
+
 		if(p->idxInUse[i] == false)
 		{
 			
@@ -117,8 +115,9 @@ void checkFiles(usb_t *f, const uint32_t period, idxPool_t *p)
 
 			//subtract 
 			int64_t newSize  = (int64_t) f->byteWritten - (int64_t) f->files[i].size;
-			if(isLessThanZero(newSize))
+			if(newSize < 0)
 				newSize = 0;
+
 			f->byteWritten = (uint64_t) newSize;
 			
 			//push the freed idx;
