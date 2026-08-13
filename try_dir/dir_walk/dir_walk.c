@@ -127,10 +127,11 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPoo
 
 			}
 
-			uint64_t byteWritten = copyFile(cwd, saveTo, list);
-			if(byteWritten == 0)
+			int64_t byteWritten = copyFile(cwd, saveTo, list);
+			if(byteWritten < 0 )
 			{
 				cleanDirTo(cwd);
+				fprintf(stderr, "error in CopyFile %i\n", (int) byteWritten);
 				continue;
 			}
 			//make sure theres valid idx before popping	
@@ -151,13 +152,12 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPoo
 			list->files[idx].pathUsb = cpyPath(saveTo);
 			list->files[idx].modified_at = Fmodified_at;
 			list->files[idx].pathOriginal = cpyPath(cwd);
-			list->files[idx].size = byteWritten;
+			list->files[idx].size = (uint64_t) byteWritten;
 			//assign the popped idx
 			list->files[idx].idx = idx;
-			list->byteWritten += byteWritten;
+			list->byteWritten += (uint64_t) byteWritten;
 			list->count += 1;
 			p->count += 1;
-
 
 			cleanDirTo(cwd);
 		}
