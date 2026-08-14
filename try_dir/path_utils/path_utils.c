@@ -159,8 +159,8 @@ int concat(char *dst, const char *dir_to)
 	size_t lenD = strlen(dir_to);
 
 	//+ 1 for '/', + 1 for null char
-	if(sizeof(dst) < len + lenD + 2)
-		return BUFF_OVERFLOW;
+	//if(sizeof(dst) < len + lenD + 2)
+	//	return BUFF_OVERFLOW;
 
 	dst[len] = '/';
 	memcpy(dst + len + 1, dir_to, lenD + 1);
@@ -179,8 +179,8 @@ int  setHome(char *dst, const char *path)
 	if(ret != 0)
 		return ret;
 
-	if(sizeof(dst) < strlen(path) + 1)
-		return BUFF_OVERFLOW;
+	//if(sizeof(dst) < strlen(path) + 1)
+	//	return BUFF_OVERFLOW;
 	memcpy(dst, path, strlen(path) + 1); 
 	return ret;
 }
@@ -189,6 +189,8 @@ int  setHome(char *dst, const char *path)
 char *cpyPath(const char *path)
 {
 	if(isPathValid(path, PATH_RELATIVE) != 0)
+		return NULL;
+	if(strlen(path) > PATH_MAX)
 		return NULL;
 
 
