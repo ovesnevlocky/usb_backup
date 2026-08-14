@@ -98,9 +98,9 @@ bool myStrCmp(const char *path, const char *fname)
 	{
 		if(path[idx - 1] == '/')
 			break;
-		char p = path[idx-  1];
-		char f = fname[idx2 - 1];
-		if(p != f)
+		//char p = path[idx-  1];
+		//char f = fname[idx2 - 1];
+		if(path[idx - 1] != fname[idx2 - 1] )
 			return false;
 	
 		idx--;
@@ -108,7 +108,8 @@ bool myStrCmp(const char *path, const char *fname)
 	}
 
 
-	if(path[idx - 1] == '/' && idx2 == 0) return true;
+	if(path[idx - 1] == '/' && idx2 == 0) 
+		return true;
 
 	return false;
 
@@ -139,8 +140,8 @@ bool isInSameDir(const char *cwdUsb,const char * dir_to)
 int concat(char *dst, const char *dir_to)
 {
 	//the first case
-	if(strcmp(dir_to, " ") == 0)
-		return 0;
+	//if(strcmp(dir_to, " ") == 0)
+	//	return 0;
 		
 	int ret = 0;
 
@@ -150,9 +151,16 @@ int concat(char *dst, const char *dir_to)
 	if(ret != 0)
 		return ret;
 
+	if(strcmp(dir_to, " ") == 0)
+		return 0;
+
+
 	size_t len = strlen(dst);
 	size_t lenD = strlen(dir_to);
-	
+
+	//+ 1 for '/', + 1 for null char
+	if(sizeof(dst) < len + lenD + 2)
+		return BUFF_OVERFLOW;
 
 	dst[len] = '/';
 	memcpy(dst + len + 1, dir_to, lenD + 1);
@@ -171,6 +179,8 @@ int  setHome(char *dst, const char *path)
 	if(ret != 0)
 		return ret;
 
+	if(sizeof(dst) < strlen(path) + 1)
+		return BUFF_OVERFLOW;
 	memcpy(dst, path, strlen(path) + 1); 
 	return ret;
 }
@@ -180,6 +190,7 @@ char *cpyPath(const char *path)
 {
 	if(isPathValid(path, PATH_RELATIVE) != 0)
 		return NULL;
+
 
 	char *ret = malloc(sizeof(char) * (strlen(path) + 1));
 	memcpy(ret, path, strlen(path) + 1);

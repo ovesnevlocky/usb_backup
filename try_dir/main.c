@@ -25,9 +25,11 @@ int main(void)
 {
 	char cwd[PATH_MAX] = {0};
 	char *path = "/home/kazuy/ws/usb/try_dir/testdir";
+	int ret = 0;
+	ret = setHome(&cwd, path);
+	if(ret != 0)
+		return ret;
 
-	setHome(cwd, path);	
-	
 
 	usb_t f;
 	if(!usbInit(&f))
