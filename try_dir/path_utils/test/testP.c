@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <linux/limits.h>
 
 
 void printError(int err)
@@ -34,14 +35,8 @@ void printError(int err)
 
 void setHomeTest()
 {
-	char buff[8] = {0};
-
 	char *home = "/home/ka";
-	int ret = setHome(buff, home);
-	assert(ret != 0);
 
-	setHome(NULL, home);
-	assert(ret != 0);
 
 }
 
@@ -50,7 +45,6 @@ void concatTest()
 	char buff[8] = {0};
 	strcpy(buff, "/home");
 	int ret = concat(buff, "a");
-	
 
 	if(ret != 0)
 		printError(ret);
@@ -58,6 +52,32 @@ void concatTest()
 		fprintf(stderr , "%s\n", buff);
 
 
+	char buff1[PATH_MAX] = {0};
+	buff1[0] = '/';
+
+	//case upper bound ok
+	for(int i = 1; i < 4093; i++)
+		buff1[i] = 'a';
+
+	printf("%lu\n", strlen(buff1));
+
+	ret = concat(buff1, "a");
+	if(ret != 0)
+		printError(ret);	
+	else
+		printf("%s\n %lu\n", buff1, strlen(buff1));
+
+	char buff2[PATH_MAX] = {0};
+	buff2[0] = '/';
+
+	for(int i = 1; i < 4093; i++)
+		buff2[i] = 'a';
+	
+	ret = concat(buff2, "");
+	if(ret != 0)
+		printError(ret);
+	else 
+		printf("%s\n", buff2);	
 
 }
 

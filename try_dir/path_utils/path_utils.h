@@ -15,6 +15,8 @@ enum
 
 };
 
+char *getUsrName();
+
 
 int isPathValid(const char *path, int mode);
 

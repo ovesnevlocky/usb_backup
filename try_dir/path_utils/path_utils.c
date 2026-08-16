@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <linux/limits.h>
+#include <pwd.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 bool isParentDir(const char *d_name)
 {
@@ -155,12 +158,11 @@ int concat(char *dst, const char *dir_to)
 		return 0;
 
 
+	//+ 1 for '/', + 1 for null char
 	size_t len = strlen(dst);
 	size_t lenD = strlen(dir_to);
-
-	//+ 1 for '/', + 1 for null char
-	//if(sizeof(dst) < len + lenD + 2)
-	//	return BUFF_OVERFLOW;
+	if(len + lenD + 2 > PATH_MAX)
+		return BUFF_OVERFLOW;
 
 	dst[len] = '/';
 	memcpy(dst + len + 1, dir_to, lenD + 1);
@@ -168,6 +170,13 @@ int concat(char *dst, const char *dir_to)
 	return ret;
 }
 
+char * getUsrName()
+{
+	uid_t uid = getuid();
+	struct passwd *pw = getpwuid(uid);
+
+	return pw == NULL ? NULL : pw->pw_name;
+}
 
 int  setHome(char *dst, const char *path)
 {
@@ -178,10 +187,13 @@ int  setHome(char *dst, const char *path)
 
 	if(ret != 0)
 		return ret;
+	size_t len = strlen(path);
+	if(len > PATH_MAX)
+		return BUFF_OVERFLOW;
 
 	//if(sizeof(dst) < strlen(path) + 1)
 	//	return BUFF_OVERFLOW;
-	memcpy(dst, path, strlen(path) + 1); 
+	memcpy(dst, path, len + 1); 
 	return ret;
 }
 
@@ -190,6 +202,7 @@ char *cpyPath(const char *path)
 {
 	if(isPathValid(path, PATH_RELATIVE) != 0)
 		return NULL;
+
 	if(strlen(path) > PATH_MAX)
 		return NULL;
 
