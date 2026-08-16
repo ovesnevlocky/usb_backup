@@ -20,14 +20,13 @@ bool removeFile(const char *path)
 }
 
 
-void startBackUp(usb_t *f, const char *cwdHome, char *usbHome, idxPool_t *p)
+void startBackUp(usb_t *f, const char *cwdHome, path_t *cwd, char *usbHome, idxPool_t *p)
 {
 	uint32_t period = ONEMIN/10;
 
 	errno = 0;
 	int count = 0;
 	int count_ = 0;	
-	char cwd[PATH_MAX] = {0};
 
 	while(true && isUsbMounted())
 	{
@@ -38,8 +37,8 @@ void startBackUp(usb_t *f, const char *cwdHome, char *usbHome, idxPool_t *p)
 		{
 
 			fprintf(stderr, "30 sec passed\n");
-			setHome(cwd, cwdHome);
-			setHome(f->cwdUsb, usbHome);
+			setHome(cwd->path, cwdHome, cwd->size);
+			setHome(f->cwd.path, usbHome, f->cwd.size);
 			openDir(cwd, " ", f, ONEMIN/2, p);
 			count = 0;
 			count_++;

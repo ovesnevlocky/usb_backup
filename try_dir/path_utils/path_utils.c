@@ -31,6 +31,37 @@ bool isHidden(const char *d_name)
 	return d_name[0] == '.';
 }
 
+bool enlargePath(path_t *p)
+{
+	char *tmp = realloc(p->path, p->size * 2);
+	if(!tmp)
+	{
+		perror("realloc");
+		return false;
+	}
+
+	p->path = tmp;
+	p->size *= 2;
+
+	return true;
+}
+
+bool pathInit(path_t *p)
+{
+	p->size = 64;
+
+	p->path = calloc(p->size, 1);
+	if(!p->path)
+	{
+		perror("malloc");
+		return false;
+	}
+
+
+	return true;
+
+}
+
 int isPathValid(const char *path, int mode)
 {
 	if(isNull(path))
@@ -140,7 +171,7 @@ bool isInSameDir(const char *cwdUsb,const char * dir_to)
 }
 
 
-int concat(char *dst, const char *dir_to)
+int concat(char *dst, const char *dir_to, size_t size)
 {
 	//the first case
 	//if(strcmp(dir_to, " ") == 0)
@@ -178,7 +209,7 @@ char * getUsrName()
 	return pw == NULL ? NULL : pw->pw_name;
 }
 
-int  setHome(char *dst, const char *path)
+int  setHome(char *dst, const char *path, size_t size)
 {
 	int ret = 0;
 
@@ -188,10 +219,11 @@ int  setHome(char *dst, const char *path)
 	if(ret != 0)
 		return ret;
 	size_t len = strlen(path);
-	if(len > PATH_MAX)
+	if(len > size)
 		return BUFF_OVERFLOW;
 
-	//if(sizeof(dst) < strlen(path) + 1)
+	//if(sizeof(d
+	//t) < strlen(path) + 1)
 	//	return BUFF_OVERFLOW;
 	memcpy(dst, path, len + 1); 
 	return ret;

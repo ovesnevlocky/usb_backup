@@ -17,7 +17,7 @@ enum
 	INVALID_PATH, 
 
 };
-void startBackUp(usb_t *f, const char *home, char *usbHome, idxPool_t *p);
+void startBackUp(usb_t *f, const char *home, path_t *cwd, char *usbHome, idxPool_t *p);
 
 
 //copy a file, returns  bytes written  if success, otherwise 0

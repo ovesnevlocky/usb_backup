@@ -45,21 +45,29 @@ static bool  inicializeNewList(usb_t *list)
 
 }
 
-void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPool_t *p)
+void openDir(path_t *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPool_t *p)
 {
 	//if usb has no more space
 	if(list->byteWritten >= list->limit)
 		return;
 
-	concat(cwd, dir_to);
+	concat(cwd->path, dir_to, cwd->size);
 
 
-	time_t modified_at = getStat(cwd, period);
+	time_t modified_at = getStat(cwd->path, period);
+
+	int ret = 0;
 	if(modified_at)
 	{
-		concat(list->cwdUsb, dir_to);
+
+		ret = concat(list->cwd.path, dir_to, list->cwd.size);
+		if(ret == BUFF_OVERFLOW)
+		{
+			enlargePath(cwd);
+		}
+
 		errno = 0;
-		int ret = makedir(list->cwdUsb, 0777);
+		int ret = makedir(list->cwd.path, 0777);
 		if(ret != 0)
 		{
 			perror("mkdir");
@@ -67,12 +75,12 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPoo
 	
 	}
 
-	DIR *dirp = opendir(cwd);
+	DIR *dirp = opendir(cwd->path);
 
 	if(dirp == NULL)
 	{
-		cleanDirTo(cwd);
-		perror(cwd);
+		cleanDirTo(cwd->path);
+		perror(cwd->path);
 		return;
 	}
 
@@ -102,24 +110,28 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPoo
 			if(isHidden(dp->d_name))
 				continue;
 
-			concat(cwd, dp->d_name);
+			ret = concat(cwd->path, dp->d_name, cwd->size);
+			if(ret == BUFF_OVERFLOW)
+				enlargePath(cwd);
 
-			time_t Fmodified_at = getStat(cwd, period);
+			time_t Fmodified_at = getStat(cwd->path, period);
 			char saveTo[PATH_MAX] = {0};
 
-			memcpy(saveTo, list->cwdUsb, strlen(list->cwdUsb) + 1);
-			concat(saveTo, dp->d_name);
+			memcpy(saveTo, list->cwd.path, strlen(list->cwd.path) + 1);
+			ret = concat(saveTo, dp->d_name, sizeof(saveTo));
+			if(ret == BUFF_OVERFLOW)
+				enlargePath(cwd);
 
 			//dont wanto make another copy if already copied,
 			//or if not modifed  within given period
 			if(isAlreadyCopied(saveTo) == true||
 				Fmodified_at == 0)
 			{
-				cleanDirTo(cwd);
+				cleanDirTo(cwd->path);
 				continue;
 			}
 
-			fprintf(stderr, "%s was newly modified\n", cwd);
+			fprintf(stderr, "%s was newly modified\n", cwd->path);
 			if(list->count >= list->capacity)
 			{
 				if(!inicializeNewList(list))
@@ -127,10 +139,10 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPoo
 
 			}
 
-			int64_t byteWritten = copyFile(cwd, saveTo, list);
+			int64_t byteWritten = copyFile(cwd->path, saveTo, list);
 			if(byteWritten < 0 )
 			{
-				cleanDirTo(cwd);
+				cleanDirTo(cwd->path);
 				fprintf(stderr, "error in CopyFile %i\n", (int) byteWritten);
 				continue;
 			}
@@ -151,7 +163,7 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPoo
 			
 			list->files[idx].pathUsb = cpyPath(saveTo);
 			list->files[idx].modified_at = Fmodified_at;
-			list->files[idx].pathOriginal = cpyPath(cwd);
+			list->files[idx].pathOriginal = cpyPath(cwd->path);
 			list->files[idx].size = (uint64_t) byteWritten;
 			//assign the popped idx
 			list->files[idx].idx = idx;
@@ -159,19 +171,19 @@ void openDir(char *cwd, char *dir_to, usb_t *list, const uint32_t period, idxPoo
 			list->count += 1;
 			p->count += 1;
 
-			cleanDirTo(cwd);
+			cleanDirTo(cwd->path);
 		}
 
 	}while(dirp && isUsbMounted());
 
 	closedir(dirp);	
-	cleanDirTo(cwd);
+	cleanDirTo(cwd->path);
 
 	//leave from dirctory in usb when original cwd leaves//
-	if(isInSameDir(list->cwdUsb, dir_to))
+	if(isInSameDir(list->cwd.path, dir_to))
 	{
-		printf("leaving dir %s\n", list->cwdUsb);	
-		cleanDirTo(list->cwdUsb);
+		printf("leaving dir %s\n", list->cwd.path);	
+		cleanDirTo(list->cwd.path);
 	}
 	return;
 }

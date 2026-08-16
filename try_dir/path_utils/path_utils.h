@@ -2,6 +2,7 @@
 #define PATH_UTILS_H
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 enum
 {
@@ -15,6 +16,20 @@ enum
 
 };
 
+typedef struct 
+{
+	char *path;
+	//current malloc'd capacity
+	//of this array
+	size_t size;
+
+}path_t;
+
+bool pathInit(path_t *p);
+
+
+bool enlargePath(path_t *p);
+
 char *getUsrName();
 
 
@@ -22,7 +37,7 @@ int isPathValid(const char *path, int mode);
 
 bool isNull(const void *a);
 
-int concat(char *dst, const char *dir_to);
+int concat(char *dst, const char *dir_to, size_t size);
 
 int cleanDirTo(char *dst);
 
@@ -39,9 +54,6 @@ bool isHidden(const char *d_name);
 
 bool isInSameDir(const char *cwdUsb,const char * dir_to);
 
-bool isInSameDir(const char *cwdUsb,const char * dir_to);
-
-
-int setHome(char *dst, const char *path);
+int setHome(char *dst, const char *path, size_t size);
 
 #endif

@@ -26,6 +26,8 @@ void freedata(usb_t *f, idxPool_t *p)
 
 		idx++;
 	}
+	free(f->cwd.path);
+	f->cwd.path = NULL;
 
 	free(p->idxInUse);
 	p->idxInUse = NULL;

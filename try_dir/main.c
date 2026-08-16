@@ -23,10 +23,13 @@
 
 int main(void)
 {
-	char cwd[PATH_MAX] = {0};
+	path_t cwd;
+	pathInit(&cwd);
+
 	char *path = "/home/kazuy/ws/usb/try_dir/testdir";
 	int ret = 0;
-	ret = setHome(cwd, path);
+
+	ret = setHome(cwd.path, path, cwd.size);
 	if(ret != 0)
 		return ret;
 
@@ -39,19 +42,21 @@ int main(void)
 	idxPoolInit(&pool, f.capacity);
 
 	
-	int check = makedir(f.cwdUsb, 0777);
+	int check = makedir(f.cwd.path, 0777);
 	if(check == EFAULT)
 			exit(EXIT_FAILURE);
 	
-	openDir(cwd, " ", &f,ONEWEEK * 6, &pool);
+	openDir(&cwd, " ", &f,ONEWEEK * 6, &pool);
 
-	memset(cwd, 0, PATH_MAX);
-	setHome(cwd, path);
-	startBackUp(&f, cwd, "/mnt/usb/copied", &pool);
+	memset(cwd.path, 0, cwd.size - 1);
+	setHome(cwd.path, path, cwd.size);
+	startBackUp(&f,  path, &cwd, "/mnt/usb/copied", &pool);
 
 	freedata(&f, &pool);
 	
 	stackFree(&pool.idxAvailable);
+	free(cwd.path);
+	cwd.path = NULL;
 
 	return 0;
 }

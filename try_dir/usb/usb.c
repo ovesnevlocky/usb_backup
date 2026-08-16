@@ -11,7 +11,6 @@
 #include <stdio.h>
 #include "../path_utils/path_utils.h"
 #include "../stack/stack.h"
-#include <string.h>
 
 
 bool isUsbMounted()
@@ -35,8 +34,11 @@ bool usbInit(usb_t *u)
 	u->byteWritten = 0;
 	u->capacity = MAX_SIZE;
 	u->count = 0;
-	memset(u->cwdUsb, 0, PATH_MAX);
-	setHome(u->cwdUsb, "/mnt/usb/copied");	
+
+	pathInit(&u->cwd);
+
+	setHome(u->cwd.path, "/mnt/usb/copied", u->cwd.size);	
+
 	u->files =  calloc(sizeof(file_t),  u->capacity);
 	u->limit = getAvailability("/mnt/usb");
 
