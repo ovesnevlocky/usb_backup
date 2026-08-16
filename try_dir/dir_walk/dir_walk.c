@@ -109,8 +109,6 @@ void openDir(path_t *cwd, char *dir_to, usb_t *list, const uint32_t period, idxP
 				continue;
 
 			ret = concat(cwd, dp->d_name);
-			assert(ret == 0);
-
 			
 			time_t Fmodified_at = getStat(cwd->path, period);
 			path_t saveTo;
@@ -162,8 +160,9 @@ void openDir(path_t *cwd, char *dir_to, usb_t *list, const uint32_t period, idxP
 				p->idxInUse[idx] = true;
 			else
 				fprintf(stderr, "this idx:%i is in use...\n", idx);
-			
-			list->files[idx].pathUsb = cpyPath(saveTo.path);
+				
+			//list->files[idx].pathUsb = cpyPath(saveTo.path);
+			list->files[idx].pathUsb = saveTo.path;
 			list->files[idx].modified_at = Fmodified_at;
 			list->files[idx].pathOriginal = cpyPath(cwd->path);
 			list->files[idx].size = (uint64_t) byteWritten;
@@ -171,9 +170,7 @@ void openDir(path_t *cwd, char *dir_to, usb_t *list, const uint32_t period, idxP
 			list->files[idx].idx = idx;
 			list->byteWritten += (uint64_t) byteWritten;
 			list->count += 1;
-
 			p->count += 1;
-			free(saveTo.path);
 
 			cleanDirTo(cwd->path);
 		}
