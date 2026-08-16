@@ -17,6 +17,8 @@
 #include "../backup/backup.h"
 
 #include <string.h>
+#include <assert.h>
+
 
 static bool  inicializeNewList(usb_t *list)
 {
@@ -51,7 +53,7 @@ void openDir(path_t *cwd, char *dir_to, usb_t *list, const uint32_t period, idxP
 	if(list->byteWritten >= list->limit)
 		return;
 
-	concat(cwd->path, dir_to, cwd->size);
+	concat(cwd, dir_to);
 
 
 	time_t modified_at = getStat(cwd->path, period);
@@ -60,14 +62,10 @@ void openDir(path_t *cwd, char *dir_to, usb_t *list, const uint32_t period, idxP
 	if(modified_at)
 	{
 
-		ret = concat(list->cwd.path, dir_to, list->cwd.size);
-		if(ret == BUFF_OVERFLOW)
-		{
-			enlargePath(cwd);
-		}
+		ret = concat(&list->cwd, dir_to);
 
 		errno = 0;
-		int ret = makedir(list->cwd.path, 0777);
+		ret = makedir(list->cwd.path, 0777);
 		if(ret != 0)
 		{
 			perror("mkdir");
@@ -110,24 +108,28 @@ void openDir(path_t *cwd, char *dir_to, usb_t *list, const uint32_t period, idxP
 			if(isHidden(dp->d_name))
 				continue;
 
-			ret = concat(cwd->path, dp->d_name, cwd->size);
-			if(ret == BUFF_OVERFLOW)
-				enlargePath(cwd);
+			ret = concat(cwd, dp->d_name);
+			assert(ret == 0);
 
+			
 			time_t Fmodified_at = getStat(cwd->path, period);
-			char saveTo[PATH_MAX] = {0};
+			path_t saveTo;
+			size_t s = strlen(list->cwd.path) + 1;
 
-			memcpy(saveTo, list->cwd.path, strlen(list->cwd.path) + 1);
-			ret = concat(saveTo, dp->d_name, sizeof(saveTo));
-			if(ret == BUFF_OVERFLOW)
-				enlargePath(cwd);
+			saveTo.path = calloc(s, 1);
+			saveTo.size = s;
+
+			memcpy(saveTo.path, list->cwd.path, s);
+			ret = concat(&saveTo, dp->d_name);
 
 			//dont wanto make another copy if already copied,
 			//or if not modifed  within given period
-			if(isAlreadyCopied(saveTo) == true||
+			if(isAlreadyCopied(saveTo.path) == true||
 				Fmodified_at == 0)
 			{
 				cleanDirTo(cwd->path);
+
+				free(saveTo.path);
 				continue;
 			}
 
@@ -139,7 +141,7 @@ void openDir(path_t *cwd, char *dir_to, usb_t *list, const uint32_t period, idxP
 
 			}
 
-			int64_t byteWritten = copyFile(cwd->path, saveTo, list);
+			int64_t byteWritten = copyFile(cwd->path, saveTo.path, list);
 			if(byteWritten < 0 )
 			{
 				cleanDirTo(cwd->path);
@@ -161,7 +163,7 @@ void openDir(path_t *cwd, char *dir_to, usb_t *list, const uint32_t period, idxP
 			else
 				fprintf(stderr, "this idx:%i is in use...\n", idx);
 			
-			list->files[idx].pathUsb = cpyPath(saveTo);
+			list->files[idx].pathUsb = cpyPath(saveTo.path);
 			list->files[idx].modified_at = Fmodified_at;
 			list->files[idx].pathOriginal = cpyPath(cwd->path);
 			list->files[idx].size = (uint64_t) byteWritten;
@@ -169,7 +171,9 @@ void openDir(path_t *cwd, char *dir_to, usb_t *list, const uint32_t period, idxP
 			list->files[idx].idx = idx;
 			list->byteWritten += (uint64_t) byteWritten;
 			list->count += 1;
+
 			p->count += 1;
+			free(saveTo.path);
 
 			cleanDirTo(cwd->path);
 		}

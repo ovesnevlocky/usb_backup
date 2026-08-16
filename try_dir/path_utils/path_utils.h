@@ -28,7 +28,7 @@ typedef struct
 bool pathInit(path_t *p);
 
 
-bool enlargePath(path_t *p);
+bool enlargePath(path_t *p, size_t s);
 
 char *getUsrName();
 
@@ -37,10 +37,9 @@ int isPathValid(const char *path, int mode);
 
 bool isNull(const void *a);
 
-int concat(char *dst, const char *dir_to, size_t size);
+int concat(path_t *dst, const char *dir_to);
 
 int cleanDirTo(char *dst);
-
 
 char *cpyPath(const char *path);
 
