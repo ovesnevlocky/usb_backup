@@ -174,8 +174,6 @@ bool isInSameDir(const char *cwdUsb,const char * dir_to)
 int concat(path_t *dst, const char *dir_to)
 {
 	//the first case
-	//if(strcmp(dir_to, " ") == 0)
-	//	return 0;
 		
 	int ret = 0;
 
