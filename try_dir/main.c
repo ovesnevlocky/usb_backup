@@ -29,7 +29,7 @@ int main(void)
 	char *path = "/home/kazuy/ws/usb/try_dir/testdir";
 	int ret = 0;
 
-	ret = setHome(cwd.path, path, cwd.size);
+	ret = setHome(&cwd, path);
 	if(ret != 0)
 		return ret;
 
@@ -47,9 +47,10 @@ int main(void)
 			exit(EXIT_FAILURE);
 	
 	openDir(&cwd, " ", &f,ONEWEEK * 6, &pool);
+	
+	//reset
+	setHome(&cwd, path);
 
-	memset(cwd.path, 0, cwd.size - 1);
-	setHome(cwd.path, path, cwd.size);
 	startBackUp(&f,  path, &cwd, "/mnt/usb/copied", &pool);
 
 	freedata(&f, &pool);

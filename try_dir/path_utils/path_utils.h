@@ -53,6 +53,6 @@ bool isHidden(const char *d_name);
 
 bool isInSameDir(const char *cwdUsb,const char * dir_to);
 
-int setHome(char *dst, const char *path, size_t size);
+int setHome(path_t *dst, const char *path);
 
 #endif

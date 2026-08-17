@@ -48,7 +48,7 @@ bool enlargePath(path_t *p, size_t s)
 
 bool pathInit(path_t *p)
 {
-	p->size = 4096;
+	p->size = 4;
 
 	p->path = calloc(p->size, 1);
 	if(!p->path)
@@ -212,23 +212,23 @@ char * getUsrName()
 	return pw == NULL ? NULL : pw->pw_name;
 }
 
-int  setHome(char *dst, const char *path, size_t size)
+int  setHome(path_t *dst, const char *path)
 {
 	int ret = 0;
 
 	ret = isPathValid(path, PATH_ABSOLUTE);
-	ret = isPathValid(dst, PATH_RELATIVE);
+	ret = isPathValid(dst->path, PATH_RELATIVE);
 
 	if(ret != 0)
 		return ret;
 	size_t len = strlen(path);
-	if(len > size)
-		return BUFF_OVERFLOW;
+	if(len > dst->size)
+	{
+		if(!enlargePath(dst, len + 1))
+			return BUFF_OVERFLOW;
+	}
 
-	//if(sizeof(d
-	//t) < strlen(path) + 1)
-	//	return BUFF_OVERFLOW;
-	memcpy(dst, path, len + 1); 
+	memcpy(dst->path, path, len + 1); 
 	return ret;
 }
 

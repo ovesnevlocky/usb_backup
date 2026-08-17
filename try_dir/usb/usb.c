@@ -37,7 +37,7 @@ bool usbInit(usb_t *u)
 
 	pathInit(&u->cwd);
 
-	setHome(u->cwd.path, "/mnt/usb/copied", u->cwd.size);	
+	setHome(&u->cwd, "/mnt/usb/copied");	
 
 	u->files =  calloc(sizeof(file_t),  u->capacity);
 	u->limit = getAvailability("/mnt/usb");

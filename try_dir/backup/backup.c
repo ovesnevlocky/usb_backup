@@ -20,7 +20,7 @@ bool removeFile(const char *path)
 }
 
 
-void startBackUp(usb_t *f, const char *cwdHome, path_t *cwd, char *usbHome, idxPool_t *p)
+void startBackUp(usb_t *f, const char *cwdHome,path_t *cwd, char *usbHome, idxPool_t *p)
 {
 	uint32_t period = ONEMIN/10;
 
@@ -37,8 +37,8 @@ void startBackUp(usb_t *f, const char *cwdHome, path_t *cwd, char *usbHome, idxP
 		{
 
 			fprintf(stderr, "30 sec passed\n");
-			setHome(cwd->path, cwdHome, cwd->size);
-			setHome(f->cwd.path, usbHome, f->cwd.size);
+			setHome(cwd, cwdHome);
+			setHome(&f->cwd, usbHome);
 			openDir(cwd, " ", f, ONEMIN/2, p);
 			count = 0;
 			count_++;
@@ -100,10 +100,7 @@ void checkFiles(usb_t *f, const uint32_t period, idxPool_t *p)
 					,f->files[i].idx,  f->files[i].pathOriginal);
 
             		if(!removeFile(f->files[i].pathUsb))
-			{
                 		perror("remove");
-				continue;
-			}
                 
 			free(f->files[i].pathOriginal);
 			free(f->files[i].pathUsb);
@@ -131,38 +128,29 @@ void checkFiles(usb_t *f, const uint32_t period, idxPool_t *p)
 			//setfalse
 			p->idxInUse[f->files[i].idx] = false;
 		}
-		if(!modified_at)
+		else if(modified_at)
 		{
-			count--;
-			continue;
-		}
-		//make new copy
-		int64_t bytesWritten = copyFile(f->files[i].pathOriginal, f->files[i].pathUsb, f);
+			//make new copy
+			uint64_t bytesWritten = copyFile(f->files[i].pathOriginal, f->files[i].pathUsb, f);
+			if(bytesWritten)
+			{
+				//diff of the 2 same files
+				int64_t diff = (int64_t) bytesWritten - (int64_t) f->files[i].size;
 
-		//meaning for some reason failed to make a copy	
-		if(bytesWritten < 0)
-		{
-			fprintf(stderr, "failed to make a copy %i\n",(int) bytesWritten);
-			continue;
-		}
-		
-		//diff of the 2 same files
-		int64_t diff = bytesWritten - (int64_t) f->files[i].size;
-
-		//compute new byteWritten of entire files//
-             	int64_t newByteWritten = (int64_t)f->byteWritten + diff;
-
-		if(newByteWritten < 0)
-			newByteWritten = 0;
-
-              	f->files[i].size = bytesWritten;
-				
-               	f->byteWritten = newByteWritten;
+				//compute new byteWritten of entire files//
+                		int64_t newByteWritten = (int64_t)f->byteWritten + diff;
 			
-		//renew the modified time
-		f->files[i].modified_at = modified_at;
-		
+				if(newByteWritten < 0)
+					newByteWritten = 0;
 
+                		f->files[i].size = bytesWritten;
+					
+                		f->byteWritten = newByteWritten;
+				
+				//renew the modified time
+				f->files[i].modified_at = modified_at;
+			}
+		}
 		count--;
 	}
 
@@ -175,7 +163,7 @@ bool isAlreadyCopied(char *pathUsb)
 	FILE *fp = fopen(pathUsb, "rb");
 	if(fp)
 	{
-		fprintf(stderr, "already copied: %s, skip\n",pathUsb );
+		fprintf(stderr, "given file is already copied to usb, skip\n");
 		return fclose(fp) == 0;	
 	}
 	return false;
@@ -211,7 +199,7 @@ int64_t copyFile(const char *cwd, const  char *saveTo, const usb_t * u)
 	{
 		char buff[4096] = {0};
 		byteRead = fread(buff, 1, sizeof(buff), fp);
-		if(byteRead < 0)
+		if(byteRead <= 0)
 			break;
 	
 		if(isAboveLimit(byteRead + bytesWritten , u->limit, u->byteWritten))
@@ -236,8 +224,8 @@ int64_t copyFile(const char *cwd, const  char *saveTo, const usb_t * u)
 
 	}while(byteRead && fp && fp_out);
 
-	if( fclose(fp_out) != 0 || fclose(fp) != 0)
-		return ERROR_CLOSE_F;
+	if(fclose(fp_out) != 0 || fclose(fp) != 0)
+			return ERROR_CLOSE_F;
 
 	return bytesWritten;
 }
