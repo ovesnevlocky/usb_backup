@@ -67,11 +67,6 @@ int isPathValid(const char *path, int mode)
 	if(isNull(path))
 		return PATH_NULL;
 
-	if(strlen(path) > PATH_MAX)
-	{
-		fprintf(stderr, "length is over PATH_MAX\n");
-		return PATH_TOO_LONG;
-	}
 
 	if(mode == PATH_ABSOLUTE && path[0] != '/')
 	{
@@ -96,14 +91,17 @@ bool isNull(const void *a)
 
 
 	//change back to the string before concating//
-int cleanDirTo(char *cwd)
+int cleanDirTo(char *cwd, size_t lenD)
 {
 	int ret = 0;
 
 	ret = isPathValid(cwd, PATH_ABSOLUTE);
 	if(ret != 0)
 		return ret;
-	
+
+	if(lenD == 0)
+		return 0;
+
 	size_t idx = strlen(cwd);
 
 	while(idx > 0 && cwd[idx - 1] !='/')
@@ -111,7 +109,7 @@ int cleanDirTo(char *cwd)
 		cwd[idx - 1] = '\0';
 		idx--;
 	}
-
+	
 	cwd[idx - 1] = '\0';
 
 	return ret;
@@ -128,7 +126,7 @@ bool myStrCmp(const char *path, const char *fname)
 	size_t idx = strlen(path);
 	size_t idx2 = strlen(fname);
 
-	while(idx > 0  && idx2 > 0)
+	while(idx > 0 && idx2 > 0)
 	{
 		if(path[idx - 1] == '/')
 			break;
@@ -204,7 +202,7 @@ int concat(path_t *dst, const char *dir_to)
 	return ret;
 }
 
-char * getUsrName()
+char* getUsrName()
 {
 	uid_t uid = getuid();
 	struct passwd *pw = getpwuid(uid);
@@ -212,7 +210,7 @@ char * getUsrName()
 	return pw == NULL ? NULL : pw->pw_name;
 }
 
-int  setHome(path_t *dst, const char *path)
+int setHome(path_t *dst, const char *path)
 {
 	int ret = 0;
 

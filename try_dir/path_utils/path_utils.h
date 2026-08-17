@@ -39,7 +39,7 @@ bool isNull(const void *a);
 
 int concat(path_t *dst, const char *dir_to);
 
-int cleanDirTo(char *dst);
+int cleanDirTo(char *dst, size_t lenD);
 
 char *cpyPath(const char *path);
 

@@ -26,7 +26,7 @@ int main(void)
 	path_t cwd;
 	pathInit(&cwd);
 
-	char *path = "/home/kazuy/ws/usb/try_dir/testdir";
+	char *path = "/home/kazuy/ws/usb";
 	int ret = 0;
 
 	ret = setHome(&cwd, path);

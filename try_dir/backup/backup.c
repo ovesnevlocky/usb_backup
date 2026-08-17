@@ -43,9 +43,9 @@ void startBackUp(usb_t *f, const char *cwdHome,path_t *cwd, char *usbHome, idxPo
 			count = 0;
 			count_++;
 		}
-
+	
 		sleep(period);
-		if(count_ > 7)
+		if(count_ > 4)
 			return;
 	}
 

@@ -19,6 +19,12 @@
 #include <string.h>
 #include <assert.h>
 
+typedef struct 
+{
+	char fname[256];
+	size_t size;
+
+}fname;
 
 static bool  inicializeNewList(usb_t *list)
 {
@@ -75,23 +81,26 @@ void openDir(path_t *cwd, char *dir_to, usb_t *list, const uint32_t period, idxP
 
 	DIR *dirp = opendir(cwd->path);
 
+	//if not being able to open
 	if(dirp == NULL)
 	{
-		cleanDirTo(cwd->path);
+		cleanDirTo(cwd->path, 0);
 		perror(cwd->path);
 		return;
 	}
-
+	struct dirent  *dp = {0};
+	size_t lenS = 0;
 	do	
 	{
 		errno = 0;
-		struct dirent *dp = readdir(dirp);
+		dp = readdir(dirp);
 		if(dp == NULL)
 		{
 			if(errno !=  0)
 				perror("readdir");
 			break;	
 		}			
+		lenS =  strlen(dp->d_name);
 
 		if(dp ->d_type == DT_DIR)
 		{
@@ -125,7 +134,7 @@ void openDir(path_t *cwd, char *dir_to, usb_t *list, const uint32_t period, idxP
 			if(isAlreadyCopied(saveTo.path) == true||
 				Fmodified_at == 0)
 			{
-				cleanDirTo(cwd->path);
+				cleanDirTo(cwd->path, lenS);
 
 				free(saveTo.path);
 				continue;
@@ -142,7 +151,7 @@ void openDir(path_t *cwd, char *dir_to, usb_t *list, const uint32_t period, idxP
 			int64_t byteWritten = copyFile(cwd->path, saveTo.path, list);
 			if(byteWritten < 0 )
 			{
-				cleanDirTo(cwd->path);
+				cleanDirTo(cwd->path, lenS);
 				fprintf(stderr, "error in CopyFile %i\n", (int) byteWritten);
 				continue;
 			}
@@ -172,19 +181,19 @@ void openDir(path_t *cwd, char *dir_to, usb_t *list, const uint32_t period, idxP
 			list->count += 1;
 			p->count += 1;
 
-			cleanDirTo(cwd->path);
+			cleanDirTo(cwd->path, lenS);
 		}
 
 	}while(dirp && isUsbMounted());
 
 	closedir(dirp);	
-	cleanDirTo(cwd->path);
+	cleanDirTo(cwd->path, lenS);
 
 	//leave from dirctory in usb when original cwd leaves//
 	if(isInSameDir(list->cwd.path, dir_to))
 	{
 		printf("leaving dir %s\n", list->cwd.path);	
-		cleanDirTo(list->cwd.path);
+		cleanDirTo(list->cwd.path, lenS);
 	}
 	return;
 }
