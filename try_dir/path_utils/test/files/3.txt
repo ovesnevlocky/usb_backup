@@ -1,0 +1,508 @@
+
+./files/testO3.o:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000000000 <isParentDir>:
+   0:	f3 0f 1e fa          	endbr64
+   4:	48 85 ff             	test   rdi,rdi
+   7:	74 1f                	je     28 <isParentDir+0x28>
+   9:	0f b6 07             	movzx  eax,BYTE PTR [rdi]
+   c:	83 e8 2e             	sub    eax,0x2e
+   f:	75 0d                	jne    1e <isParentDir+0x1e>
+  11:	0f b6 47 01          	movzx  eax,BYTE PTR [rdi+0x1]
+  15:	83 e8 2e             	sub    eax,0x2e
+  18:	75 04                	jne    1e <isParentDir+0x1e>
+  1a:	0f b6 47 02          	movzx  eax,BYTE PTR [rdi+0x2]
+  1e:	85 c0                	test   eax,eax
+  20:	0f 94 c0             	sete   al
+  23:	c3                   	ret
+  24:	0f 1f 40 00          	nop    DWORD PTR [rax+0x0]
+  28:	31 c0                	xor    eax,eax
+  2a:	c3                   	ret
+  2b:	0f 1f 44 00 00       	nop    DWORD PTR [rax+rax*1+0x0]
+
+0000000000000030 <isCurrDir>:
+  30:	f3 0f 1e fa          	endbr64
+  34:	48 85 ff             	test   rdi,rdi
+  37:	74 27                	je     60 <isCurrDir+0x30>
+  39:	0f b6 07             	movzx  eax,BYTE PTR [rdi]
+  3c:	83 e8 2e             	sub    eax,0x2e
+  3f:	74 0f                	je     50 <isCurrDir+0x20>
+  41:	85 c0                	test   eax,eax
+  43:	0f 94 c0             	sete   al
+  46:	c3                   	ret
+  47:	66 0f 1f 84 00 00 00 	nop    WORD PTR [rax+rax*1+0x0]
+  4e:	00 00 
+  50:	0f b6 47 01          	movzx  eax,BYTE PTR [rdi+0x1]
+  54:	85 c0                	test   eax,eax
+  56:	0f 94 c0             	sete   al
+  59:	c3                   	ret
+  5a:	66 0f 1f 44 00 00    	nop    WORD PTR [rax+rax*1+0x0]
+  60:	31 c0                	xor    eax,eax
+  62:	c3                   	ret
+  63:	66 66 2e 0f 1f 84 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+  6a:	00 00 00 00 
+  6e:	66 90                	xchg   ax,ax
+
+0000000000000070 <isHidden>:
+  70:	f3 0f 1e fa          	endbr64
+  74:	48 85 ff             	test   rdi,rdi
+  77:	74 07                	je     80 <isHidden+0x10>
+  79:	80 3f 2e             	cmp    BYTE PTR [rdi],0x2e
+  7c:	0f 94 c0             	sete   al
+  7f:	c3                   	ret
+  80:	31 c0                	xor    eax,eax
+  82:	c3                   	ret
+  83:	66 66 2e 0f 1f 84 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+  8a:	00 00 00 00 
+  8e:	66 90                	xchg   ax,ax
+
+0000000000000090 <enlargePath>:
+  90:	f3 0f 1e fa          	endbr64
+  94:	55                   	push   rbp
+  95:	48 89 f5             	mov    rbp,rsi
+  98:	53                   	push   rbx
+  99:	48 89 fb             	mov    rbx,rdi
+  9c:	48 83 ec 08          	sub    rsp,0x8
+  a0:	48 8b 3f             	mov    rdi,QWORD PTR [rdi]
+  a3:	e8 00 00 00 00       	call   a8 <enlargePath+0x18>
+  a8:	48 85 c0             	test   rax,rax
+  ab:	0f 84 00 00 00 00    	je     b1 <enlargePath+0x21>
+  b1:	48 89 6b 08          	mov    QWORD PTR [rbx+0x8],rbp
+  b5:	48 89 03             	mov    QWORD PTR [rbx],rax
+  b8:	b8 01 00 00 00       	mov    eax,0x1
+  bd:	48 83 c4 08          	add    rsp,0x8
+  c1:	5b                   	pop    rbx
+  c2:	5d                   	pop    rbp
+  c3:	c3                   	ret
+  c4:	66 66 2e 0f 1f 84 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+  cb:	00 00 00 00 
+  cf:	90                   	nop
+
+00000000000000d0 <pathInit>:
+  d0:	f3 0f 1e fa          	endbr64
+  d4:	53                   	push   rbx
+  d5:	be 01 00 00 00       	mov    esi,0x1
+  da:	48 89 fb             	mov    rbx,rdi
+  dd:	48 c7 47 08 04 00 00 	mov    QWORD PTR [rdi+0x8],0x4
+  e4:	00 
+  e5:	bf 04 00 00 00       	mov    edi,0x4
+  ea:	e8 00 00 00 00       	call   ef <pathInit+0x1f>
+  ef:	48 89 03             	mov    QWORD PTR [rbx],rax
+  f2:	48 85 c0             	test   rax,rax
+  f5:	0f 84 00 00 00 00    	je     fb <pathInit+0x2b>
+  fb:	b8 01 00 00 00       	mov    eax,0x1
+ 100:	5b                   	pop    rbx
+ 101:	c3                   	ret
+ 102:	66 66 2e 0f 1f 84 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+ 109:	00 00 00 00 
+ 10d:	0f 1f 00             	nop    DWORD PTR [rax]
+
+0000000000000110 <isPathValid>:
+ 110:	f3 0f 1e fa          	endbr64
+ 114:	48 85 ff             	test   rdi,rdi
+ 117:	74 47                	je     160 <isPathValid+0x50>
+ 119:	31 c0                	xor    eax,eax
+ 11b:	83 fe 0b             	cmp    esi,0xb
+ 11e:	74 08                	je     128 <isPathValid+0x18>
+ 120:	c3                   	ret
+ 121:	0f 1f 80 00 00 00 00 	nop    DWORD PTR [rax+0x0]
+ 128:	80 3f 2f             	cmp    BYTE PTR [rdi],0x2f
+ 12b:	74 f3                	je     120 <isPathValid+0x10>
+ 12d:	48 83 ec 08          	sub    rsp,0x8
+ 131:	48 8b 0d 00 00 00 00 	mov    rcx,QWORD PTR [rip+0x0]        # 138 <isPathValid+0x28>
+ 138:	ba 24 00 00 00       	mov    edx,0x24
+ 13d:	be 01 00 00 00       	mov    esi,0x1
+ 142:	48 8d 3d 00 00 00 00 	lea    rdi,[rip+0x0]        # 149 <isPathValid+0x39>
+ 149:	e8 00 00 00 00       	call   14e <isPathValid+0x3e>
+ 14e:	b8 18 00 00 00       	mov    eax,0x18
+ 153:	48 83 c4 08          	add    rsp,0x8
+ 157:	c3                   	ret
+ 158:	0f 1f 84 00 00 00 00 	nop    DWORD PTR [rax+rax*1+0x0]
+ 15f:	00 
+ 160:	b8 14 00 00 00       	mov    eax,0x14
+ 165:	c3                   	ret
+ 166:	66 2e 0f 1f 84 00 00 	cs nop WORD PTR [rax+rax*1+0x0]
+ 16d:	00 00 00 
+
+0000000000000170 <isGit>:
+ 170:	f3 0f 1e fa          	endbr64
+ 174:	48 83 ec 08          	sub    rsp,0x8
+ 178:	48 8d 35 00 00 00 00 	lea    rsi,[rip+0x0]        # 17f <isGit+0xf>
+ 17f:	e8 00 00 00 00       	call   184 <isGit+0x14>
+ 184:	85 c0                	test   eax,eax
+ 186:	0f 94 c0             	sete   al
+ 189:	48 83 c4 08          	add    rsp,0x8
+ 18d:	c3                   	ret
+ 18e:	66 90                	xchg   ax,ax
+
+0000000000000190 <isNull>:
+ 190:	f3 0f 1e fa          	endbr64
+ 194:	48 85 ff             	test   rdi,rdi
+ 197:	0f 94 c0             	sete   al
+ 19a:	c3                   	ret
+ 19b:	0f 1f 44 00 00       	nop    DWORD PTR [rax+rax*1+0x0]
+
+00000000000001a0 <cleanDirTo>:
+ 1a0:	f3 0f 1e fa          	endbr64
+ 1a4:	48 85 ff             	test   rdi,rdi
+ 1a7:	74 7f                	je     228 <cleanDirTo+0x88>
+ 1a9:	53                   	push   rbx
+ 1aa:	80 3f 2f             	cmp    BYTE PTR [rdi],0x2f
+ 1ad:	48 89 fb             	mov    rbx,rdi
+ 1b0:	75 4e                	jne    200 <cleanDirTo+0x60>
+ 1b2:	48 85 f6             	test   rsi,rsi
+ 1b5:	74 33                	je     1ea <cleanDirTo+0x4a>
+ 1b7:	e8 00 00 00 00       	call   1bc <cleanDirTo+0x1c>
+ 1bc:	48 85 c0             	test   rax,rax
+ 1bf:	74 2f                	je     1f0 <cleanDirTo+0x50>
+ 1c1:	ba 01 00 00 00       	mov    edx,0x1
+ 1c6:	48 8d 44 03 ff       	lea    rax,[rbx+rax*1-0x1]
+ 1cb:	48 29 da             	sub    rdx,rbx
+ 1ce:	eb 0f                	jmp    1df <cleanDirTo+0x3f>
+ 1d0:	c6 00 00             	mov    BYTE PTR [rax],0x0
+ 1d3:	48 89 d7             	mov    rdi,rdx
+ 1d6:	48 83 e8 01          	sub    rax,0x1
+ 1da:	48 01 c7             	add    rdi,rax
+ 1dd:	74 11                	je     1f0 <cleanDirTo+0x50>
+ 1df:	80 38 2f             	cmp    BYTE PTR [rax],0x2f
+ 1e2:	48 89 c1             	mov    rcx,rax
+ 1e5:	75 e9                	jne    1d0 <cleanDirTo+0x30>
+ 1e7:	c6 01 00             	mov    BYTE PTR [rcx],0x0
+ 1ea:	31 c0                	xor    eax,eax
+ 1ec:	5b                   	pop    rbx
+ 1ed:	c3                   	ret
+ 1ee:	66 90                	xchg   ax,ax
+ 1f0:	48 8d 4b ff          	lea    rcx,[rbx-0x1]
+ 1f4:	c6 01 00             	mov    BYTE PTR [rcx],0x0
+ 1f7:	eb f1                	jmp    1ea <cleanDirTo+0x4a>
+ 1f9:	0f 1f 80 00 00 00 00 	nop    DWORD PTR [rax+0x0]
+ 200:	48 8b 0d 00 00 00 00 	mov    rcx,QWORD PTR [rip+0x0]        # 207 <cleanDirTo+0x67>
+ 207:	ba 24 00 00 00       	mov    edx,0x24
+ 20c:	be 01 00 00 00       	mov    esi,0x1
+ 211:	48 8d 3d 00 00 00 00 	lea    rdi,[rip+0x0]        # 218 <cleanDirTo+0x78>
+ 218:	e8 00 00 00 00       	call   21d <cleanDirTo+0x7d>
+ 21d:	b8 18 00 00 00       	mov    eax,0x18
+ 222:	5b                   	pop    rbx
+ 223:	c3                   	ret
+ 224:	0f 1f 40 00          	nop    DWORD PTR [rax+0x0]
+ 228:	b8 14 00 00 00       	mov    eax,0x14
+ 22d:	c3                   	ret
+ 22e:	66 90                	xchg   ax,ax
+
+0000000000000230 <myStrCmp>:
+ 230:	f3 0f 1e fa          	endbr64
+ 234:	48 85 ff             	test   rdi,rdi
+ 237:	0f 84 93 00 00 00    	je     2d0 <myStrCmp+0xa0>
+ 23d:	41 54                	push   r12
+ 23f:	55                   	push   rbp
+ 240:	48 89 fd             	mov    rbp,rdi
+ 243:	53                   	push   rbx
+ 244:	80 3f 2f             	cmp    BYTE PTR [rdi],0x2f
+ 247:	75 5f                	jne    2a8 <myStrCmp+0x78>
+ 249:	49 89 f4             	mov    r12,rsi
+ 24c:	48 85 f6             	test   rsi,rsi
+ 24f:	74 74                	je     2c5 <myStrCmp+0x95>
+ 251:	e8 00 00 00 00       	call   256 <myStrCmp+0x26>
+ 256:	4c 89 e7             	mov    rdi,r12
+ 259:	48 89 c3             	mov    rbx,rax
+ 25c:	e8 00 00 00 00       	call   261 <myStrCmp+0x31>
+ 261:	eb 14                	jmp    277 <myStrCmp+0x47>
+ 263:	0f 1f 44 00 00       	nop    DWORD PTR [rax+rax*1+0x0]
+ 268:	80 fa 2f             	cmp    dl,0x2f
+ 26b:	74 25                	je     292 <myStrCmp+0x62>
+ 26d:	48 83 e8 01          	sub    rax,0x1
+ 271:	41 38 14 04          	cmp    BYTE PTR [r12+rax*1],dl
+ 275:	75 4e                	jne    2c5 <myStrCmp+0x95>
+ 277:	48 85 db             	test   rbx,rbx
+ 27a:	40 0f 95 c7          	setne  dil
+ 27e:	48 85 c0             	test   rax,rax
+ 281:	0f 95 c1             	setne  cl
+ 284:	48 83 eb 01          	sub    rbx,0x1
+ 288:	0f b6 54 1d 00       	movzx  edx,BYTE PTR [rbp+rbx*1+0x0]
+ 28d:	40 84 cf             	test   dil,cl
+ 290:	75 d6                	jne    268 <myStrCmp+0x38>
+ 292:	80 fa 2f             	cmp    dl,0x2f
+ 295:	0f 94 c2             	sete   dl
+ 298:	48 85 c0             	test   rax,rax
+ 29b:	0f 94 c0             	sete   al
+ 29e:	21 d0                	and    eax,edx
+ 2a0:	5b                   	pop    rbx
+ 2a1:	5d                   	pop    rbp
+ 2a2:	41 5c                	pop    r12
+ 2a4:	c3                   	ret
+ 2a5:	0f 1f 00             	nop    DWORD PTR [rax]
+ 2a8:	48 8b 0d 00 00 00 00 	mov    rcx,QWORD PTR [rip+0x0]        # 2af <myStrCmp+0x7f>
+ 2af:	ba 24 00 00 00       	mov    edx,0x24
+ 2b4:	be 01 00 00 00       	mov    esi,0x1
+ 2b9:	48 8d 3d 00 00 00 00 	lea    rdi,[rip+0x0]        # 2c0 <myStrCmp+0x90>
+ 2c0:	e8 00 00 00 00       	call   2c5 <myStrCmp+0x95>
+ 2c5:	31 c0                	xor    eax,eax
+ 2c7:	eb d7                	jmp    2a0 <myStrCmp+0x70>
+ 2c9:	0f 1f 80 00 00 00 00 	nop    DWORD PTR [rax+0x0]
+ 2d0:	31 c0                	xor    eax,eax
+ 2d2:	c3                   	ret
+ 2d3:	66 66 2e 0f 1f 84 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+ 2da:	00 00 00 00 
+ 2de:	66 90                	xchg   ax,ax
+
+00000000000002e0 <isInSameDir>:
+ 2e0:	f3 0f 1e fa          	endbr64
+ 2e4:	48 85 ff             	test   rdi,rdi
+ 2e7:	74 6f                	je     358 <isInSameDir+0x78>
+ 2e9:	41 54                	push   r12
+ 2eb:	55                   	push   rbp
+ 2ec:	53                   	push   rbx
+ 2ed:	80 3f 2f             	cmp    BYTE PTR [rdi],0x2f
+ 2f0:	48 89 fb             	mov    rbx,rdi
+ 2f3:	75 3b                	jne    330 <isInSameDir+0x50>
+ 2f5:	48 89 f5             	mov    rbp,rsi
+ 2f8:	48 85 f6             	test   rsi,rsi
+ 2fb:	74 18                	je     315 <isInSameDir+0x35>
+ 2fd:	48 89 f7             	mov    rdi,rsi
+ 300:	e8 00 00 00 00       	call   305 <isInSameDir+0x25>
+ 305:	48 89 df             	mov    rdi,rbx
+ 308:	49 89 c4             	mov    r12,rax
+ 30b:	e8 00 00 00 00       	call   310 <isInSameDir+0x30>
+ 310:	4c 39 e0             	cmp    rax,r12
+ 313:	73 0b                	jae    320 <isInSameDir+0x40>
+ 315:	5b                   	pop    rbx
+ 316:	31 c0                	xor    eax,eax
+ 318:	5d                   	pop    rbp
+ 319:	41 5c                	pop    r12
+ 31b:	c3                   	ret
+ 31c:	0f 1f 40 00          	nop    DWORD PTR [rax+0x0]
+ 320:	48 89 ee             	mov    rsi,rbp
+ 323:	48 89 df             	mov    rdi,rbx
+ 326:	5b                   	pop    rbx
+ 327:	5d                   	pop    rbp
+ 328:	41 5c                	pop    r12
+ 32a:	e9 01 ff ff ff       	jmp    230 <myStrCmp>
+ 32f:	90                   	nop
+ 330:	48 8b 0d 00 00 00 00 	mov    rcx,QWORD PTR [rip+0x0]        # 337 <isInSameDir+0x57>
+ 337:	ba 24 00 00 00       	mov    edx,0x24
+ 33c:	be 01 00 00 00       	mov    esi,0x1
+ 341:	48 8d 3d 00 00 00 00 	lea    rdi,[rip+0x0]        # 348 <isInSameDir+0x68>
+ 348:	e8 00 00 00 00       	call   34d <isInSameDir+0x6d>
+ 34d:	5b                   	pop    rbx
+ 34e:	31 c0                	xor    eax,eax
+ 350:	5d                   	pop    rbp
+ 351:	41 5c                	pop    r12
+ 353:	c3                   	ret
+ 354:	0f 1f 40 00          	nop    DWORD PTR [rax+0x0]
+ 358:	31 c0                	xor    eax,eax
+ 35a:	c3                   	ret
+ 35b:	0f 1f 44 00 00       	nop    DWORD PTR [rax+rax*1+0x0]
+
+0000000000000360 <concat>:
+ 360:	f3 0f 1e fa          	endbr64
+ 364:	41 57                	push   r15
+ 366:	41 56                	push   r14
+ 368:	41 55                	push   r13
+ 36a:	41 54                	push   r12
+ 36c:	55                   	push   rbp
+ 36d:	53                   	push   rbx
+ 36e:	48 83 ec 08          	sub    rsp,0x8
+ 372:	48 8b 2f             	mov    rbp,QWORD PTR [rdi]
+ 375:	48 85 ed             	test   rbp,rbp
+ 378:	0f 84 ca 00 00 00    	je     448 <concat+0xe8>
+ 37e:	80 7d 00 2f          	cmp    BYTE PTR [rbp+0x0],0x2f
+ 382:	0f 85 88 00 00 00    	jne    410 <concat+0xb0>
+ 388:	80 3e 20             	cmp    BYTE PTR [rsi],0x20
+ 38b:	48 89 fb             	mov    rbx,rdi
+ 38e:	49 89 f4             	mov    r12,rsi
+ 391:	74 6d                	je     400 <concat+0xa0>
+ 393:	48 89 ef             	mov    rdi,rbp
+ 396:	e8 00 00 00 00       	call   39b <concat+0x3b>
+ 39b:	4c 89 e7             	mov    rdi,r12
+ 39e:	49 89 c6             	mov    r14,rax
+ 3a1:	e8 00 00 00 00       	call   3a6 <concat+0x46>
+ 3a6:	49 89 c5             	mov    r13,rax
+ 3a9:	4d 8d 7c 06 02       	lea    r15,[r14+rax*1+0x2]
+ 3ae:	4c 39 7b 08          	cmp    QWORD PTR [rbx+0x8],r15
+ 3b2:	73 1e                	jae    3d2 <concat+0x72>
+ 3b4:	48 89 ef             	mov    rdi,rbp
+ 3b7:	4c 89 fe             	mov    rsi,r15
+ 3ba:	e8 00 00 00 00       	call   3bf <concat+0x5f>
+ 3bf:	48 89 c5             	mov    rbp,rax
+ 3c2:	48 85 c0             	test   rax,rax
+ 3c5:	0f 84 00 00 00 00    	je     3cb <concat+0x6b>
+ 3cb:	48 89 03             	mov    QWORD PTR [rbx],rax
+ 3ce:	4c 89 7b 08          	mov    QWORD PTR [rbx+0x8],r15
+ 3d2:	42 c6 44 35 00 2f    	mov    BYTE PTR [rbp+r14*1+0x0],0x2f
+ 3d8:	48 8b 03             	mov    rax,QWORD PTR [rbx]
+ 3db:	49 8d 55 01          	lea    rdx,[r13+0x1]
+ 3df:	4c 89 e6             	mov    rsi,r12
+ 3e2:	4a 8d 7c 30 01       	lea    rdi,[rax+r14*1+0x1]
+ 3e7:	e8 00 00 00 00       	call   3ec <concat+0x8c>
+ 3ec:	31 c0                	xor    eax,eax
+ 3ee:	48 83 c4 08          	add    rsp,0x8
+ 3f2:	5b                   	pop    rbx
+ 3f3:	5d                   	pop    rbp
+ 3f4:	41 5c                	pop    r12
+ 3f6:	41 5d                	pop    r13
+ 3f8:	41 5e                	pop    r14
+ 3fa:	41 5f                	pop    r15
+ 3fc:	c3                   	ret
+ 3fd:	0f 1f 00             	nop    DWORD PTR [rax]
+ 400:	80 7e 01 00          	cmp    BYTE PTR [rsi+0x1],0x0
+ 404:	74 e6                	je     3ec <concat+0x8c>
+ 406:	eb 8b                	jmp    393 <concat+0x33>
+ 408:	0f 1f 84 00 00 00 00 	nop    DWORD PTR [rax+rax*1+0x0]
+ 40f:	00 
+ 410:	48 8b 0d 00 00 00 00 	mov    rcx,QWORD PTR [rip+0x0]        # 417 <concat+0xb7>
+ 417:	ba 24 00 00 00       	mov    edx,0x24
+ 41c:	be 01 00 00 00       	mov    esi,0x1
+ 421:	48 8d 3d 00 00 00 00 	lea    rdi,[rip+0x0]        # 428 <concat+0xc8>
+ 428:	e8 00 00 00 00       	call   42d <concat+0xcd>
+ 42d:	48 83 c4 08          	add    rsp,0x8
+ 431:	b8 18 00 00 00       	mov    eax,0x18
+ 436:	5b                   	pop    rbx
+ 437:	5d                   	pop    rbp
+ 438:	41 5c                	pop    r12
+ 43a:	41 5d                	pop    r13
+ 43c:	41 5e                	pop    r14
+ 43e:	41 5f                	pop    r15
+ 440:	c3                   	ret
+ 441:	0f 1f 80 00 00 00 00 	nop    DWORD PTR [rax+0x0]
+ 448:	48 83 c4 08          	add    rsp,0x8
+ 44c:	b8 14 00 00 00       	mov    eax,0x14
+ 451:	5b                   	pop    rbx
+ 452:	5d                   	pop    rbp
+ 453:	41 5c                	pop    r12
+ 455:	41 5d                	pop    r13
+ 457:	41 5e                	pop    r14
+ 459:	41 5f                	pop    r15
+ 45b:	c3                   	ret
+ 45c:	0f 1f 40 00          	nop    DWORD PTR [rax+0x0]
+
+0000000000000460 <getUsrName>:
+ 460:	f3 0f 1e fa          	endbr64
+ 464:	48 83 ec 08          	sub    rsp,0x8
+ 468:	e8 00 00 00 00       	call   46d <getUsrName+0xd>
+ 46d:	89 c7                	mov    edi,eax
+ 46f:	e8 00 00 00 00       	call   474 <getUsrName+0x14>
+ 474:	48 85 c0             	test   rax,rax
+ 477:	74 03                	je     47c <getUsrName+0x1c>
+ 479:	48 8b 00             	mov    rax,QWORD PTR [rax]
+ 47c:	48 83 c4 08          	add    rsp,0x8
+ 480:	c3                   	ret
+ 481:	66 66 2e 0f 1f 84 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+ 488:	00 00 00 00 
+ 48c:	0f 1f 40 00          	nop    DWORD PTR [rax+0x0]
+
+0000000000000490 <setHome>:
+ 490:	f3 0f 1e fa          	endbr64
+ 494:	41 55                	push   r13
+ 496:	41 54                	push   r12
+ 498:	55                   	push   rbp
+ 499:	48 89 fd             	mov    rbp,rdi
+ 49c:	53                   	push   rbx
+ 49d:	48 89 f3             	mov    rbx,rsi
+ 4a0:	48 83 ec 08          	sub    rsp,0x8
+ 4a4:	48 85 f6             	test   rsi,rsi
+ 4a7:	74 05                	je     4ae <setHome+0x1e>
+ 4a9:	80 3e 2f             	cmp    BYTE PTR [rsi],0x2f
+ 4ac:	75 5a                	jne    508 <setHome+0x78>
+ 4ae:	4c 8b 65 00          	mov    r12,QWORD PTR [rbp+0x0]
+ 4b2:	4d 85 e4             	test   r12,r12
+ 4b5:	74 77                	je     52e <setHome+0x9e>
+ 4b7:	48 89 df             	mov    rdi,rbx
+ 4ba:	e8 00 00 00 00       	call   4bf <setHome+0x2f>
+ 4bf:	4c 8d 68 01          	lea    r13,[rax+0x1]
+ 4c3:	48 39 45 08          	cmp    QWORD PTR [rbp+0x8],rax
+ 4c7:	73 1f                	jae    4e8 <setHome+0x58>
+ 4c9:	4c 89 e7             	mov    rdi,r12
+ 4cc:	4c 89 ee             	mov    rsi,r13
+ 4cf:	e8 00 00 00 00       	call   4d4 <setHome+0x44>
+ 4d4:	49 89 c4             	mov    r12,rax
+ 4d7:	48 85 c0             	test   rax,rax
+ 4da:	0f 84 00 00 00 00    	je     4e0 <setHome+0x50>
+ 4e0:	48 89 45 00          	mov    QWORD PTR [rbp+0x0],rax
+ 4e4:	4c 89 6d 08          	mov    QWORD PTR [rbp+0x8],r13
+ 4e8:	4c 89 ea             	mov    rdx,r13
+ 4eb:	48 89 de             	mov    rsi,rbx
+ 4ee:	4c 89 e7             	mov    rdi,r12
+ 4f1:	e8 00 00 00 00       	call   4f6 <setHome+0x66>
+ 4f6:	31 c0                	xor    eax,eax
+ 4f8:	48 83 c4 08          	add    rsp,0x8
+ 4fc:	5b                   	pop    rbx
+ 4fd:	5d                   	pop    rbp
+ 4fe:	41 5c                	pop    r12
+ 500:	41 5d                	pop    r13
+ 502:	c3                   	ret
+ 503:	0f 1f 44 00 00       	nop    DWORD PTR [rax+rax*1+0x0]
+ 508:	48 8b 0d 00 00 00 00 	mov    rcx,QWORD PTR [rip+0x0]        # 50f <setHome+0x7f>
+ 50f:	ba 24 00 00 00       	mov    edx,0x24
+ 514:	be 01 00 00 00       	mov    esi,0x1
+ 519:	48 8d 3d 00 00 00 00 	lea    rdi,[rip+0x0]        # 520 <setHome+0x90>
+ 520:	e8 00 00 00 00       	call   525 <setHome+0x95>
+ 525:	4c 8b 65 00          	mov    r12,QWORD PTR [rbp+0x0]
+ 529:	4d 85 e4             	test   r12,r12
+ 52c:	75 89                	jne    4b7 <setHome+0x27>
+ 52e:	48 83 c4 08          	add    rsp,0x8
+ 532:	b8 14 00 00 00       	mov    eax,0x14
+ 537:	5b                   	pop    rbx
+ 538:	5d                   	pop    rbp
+ 539:	41 5c                	pop    r12
+ 53b:	41 5d                	pop    r13
+ 53d:	c3                   	ret
+ 53e:	66 90                	xchg   ax,ax
+
+0000000000000540 <cpyPath>:
+ 540:	f3 0f 1e fa          	endbr64
+ 544:	48 85 ff             	test   rdi,rdi
+ 547:	74 47                	je     590 <cpyPath+0x50>
+ 549:	55                   	push   rbp
+ 54a:	48 89 fd             	mov    rbp,rdi
+ 54d:	53                   	push   rbx
+ 54e:	48 83 ec 08          	sub    rsp,0x8
+ 552:	e8 00 00 00 00       	call   557 <cpyPath+0x17>
+ 557:	31 ff                	xor    edi,edi
+ 559:	48 3d 00 10 00 00    	cmp    rax,0x1000
+ 55f:	77 20                	ja     581 <cpyPath+0x41>
+ 561:	48 8d 58 01          	lea    rbx,[rax+0x1]
+ 565:	48 89 df             	mov    rdi,rbx
+ 568:	e8 00 00 00 00       	call   56d <cpyPath+0x2d>
+ 56d:	48 89 d9             	mov    rcx,rbx
+ 570:	48 89 da             	mov    rdx,rbx
+ 573:	48 89 ee             	mov    rsi,rbp
+ 576:	48 89 c7             	mov    rdi,rax
+ 579:	e8 00 00 00 00       	call   57e <cpyPath+0x3e>
+ 57e:	48 89 c7             	mov    rdi,rax
+ 581:	48 83 c4 08          	add    rsp,0x8
+ 585:	48 89 f8             	mov    rax,rdi
+ 588:	5b                   	pop    rbx
+ 589:	5d                   	pop    rbp
+ 58a:	c3                   	ret
+ 58b:	0f 1f 44 00 00       	nop    DWORD PTR [rax+rax*1+0x0]
+ 590:	31 c0                	xor    eax,eax
+ 592:	c3                   	ret
+
+Disassembly of section .text.unlikely:
+
+0000000000000000 <enlargePath.cold>:
+   0:	48 8d 3d 00 00 00 00 	lea    rdi,[rip+0x0]        # 7 <enlargePath.cold+0x7>
+   7:	e8 00 00 00 00       	call   c <enlargePath.cold+0xc>
+   c:	31 c0                	xor    eax,eax
+   e:	e9 00 00 00 00       	jmp    13 <pathInit.cold>
+
+0000000000000013 <pathInit.cold>:
+  13:	48 8d 3d 00 00 00 00 	lea    rdi,[rip+0x0]        # 1a <pathInit.cold+0x7>
+  1a:	e8 00 00 00 00       	call   1f <pathInit.cold+0xc>
+  1f:	31 c0                	xor    eax,eax
+  21:	e9 00 00 00 00       	jmp    26 <concat.cold>
+
+0000000000000026 <concat.cold>:
+  26:	48 8d 3d 00 00 00 00 	lea    rdi,[rip+0x0]        # 2d <concat.cold+0x7>
+  2d:	e8 00 00 00 00       	call   32 <concat.cold+0xc>
+  32:	b8 15 00 00 00       	mov    eax,0x15
+  37:	e9 00 00 00 00       	jmp    3c <setHome.cold>
+
+000000000000003c <setHome.cold>:
+  3c:	48 8d 3d 00 00 00 00 	lea    rdi,[rip+0x0]        # 43 <setHome.cold+0x7>
+  43:	e8 00 00 00 00       	call   48 <setHome.cold+0xc>
+  48:	b8 15 00 00 00       	mov    eax,0x15
+  4d:	e9 00 00 00 00       	jmp    52 <setHome.cold+0x16>

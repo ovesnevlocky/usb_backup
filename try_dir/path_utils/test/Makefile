@@ -11,8 +11,8 @@ $(BIN): $(OBJ)
 	$(CC) $(CFLAGS) $^ -o $@
 
 asan: $(SRC)
-	$(CC) $(CFLAGS) $(SAN) -O1 $^ -o main_asan
-	ASAN_OPTIONS=abort_on_error=1:detect_stack_use_after_return=1 ./main_asan
+	$(CC) $(CFLAGS) $(SAN) -O1 $^ -o ./bin/main_asan
+	ASAN_OPTIONS=abort_on_error=1:detect_stack_use_after_return=1 ./bin/main_asan
 
 
 run: $(BIN)
