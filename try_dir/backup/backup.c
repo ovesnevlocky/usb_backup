@@ -128,29 +128,31 @@ void checkFiles(usb_t *f, const uint32_t period, idxPool_t *p)
 			//setfalse
 			p->idxInUse[f->files[i].idx] = false;
 		}
-		else if(modified_at)
+		if(modified_at == 0)
+			continue;
+		//make new copy
+		int64_t bytesWritten = copyFile(f->files[i].pathOriginal, f->files[i].pathUsb, f);
+		if(bytesWritten < 0)
 		{
-			//make new copy
-			uint64_t bytesWritten = copyFile(f->files[i].pathOriginal, f->files[i].pathUsb, f);
-			if(bytesWritten)
-			{
-				//diff of the 2 same files
-				int64_t diff = (int64_t) bytesWritten - (int64_t) f->files[i].size;
-
-				//compute new byteWritten of entire files//
-                		int64_t newByteWritten = (int64_t)f->byteWritten + diff;
-			
-				if(newByteWritten < 0)
-					newByteWritten = 0;
-
-                		f->files[i].size = bytesWritten;
-					
-                		f->byteWritten = newByteWritten;
-				
-				//renew the modified time
-				f->files[i].modified_at = modified_at;
-			}
+			fprintf(stderr, "failed to copy a file %lu\n", bytesWritten);
 		}
+	
+		//diff of the 2 same files
+		int64_t diff = bytesWritten - (int64_t) f->files[i].size;
+
+		//compute new byteWritten of entire files//
+            		int64_t newByteWritten = (int64_t)f->byteWritten + diff;
+	
+		if(newByteWritten < 0)
+			newByteWritten = 0;
+
+              	f->files[i].size = bytesWritten;
+				
+          	f->byteWritten = (uint64_t) newByteWritten;
+			
+		//renew the modified time
+		f->files[i].modified_at = modified_at;
+		
 		count--;
 	}
 

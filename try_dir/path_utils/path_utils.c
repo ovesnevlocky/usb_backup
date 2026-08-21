@@ -33,6 +33,12 @@ bool isHidden(const char *d_name)
 
 bool enlargePath(path_t *p, size_t s)
 {
+
+	if(s > PATH_MAX)
+	{
+		fprintf(stderr, "path too long\n");
+		return false;
+	}
 	char *tmp = realloc(p->path, s);
 	if(!tmp)
 	{
@@ -48,7 +54,7 @@ bool enlargePath(path_t *p, size_t s)
 
 bool pathInit(path_t *p)
 {
-	p->size = 4;
+	p->size = 256;
 
 	p->path = calloc(p->size, 1);
 	if(!p->path)
