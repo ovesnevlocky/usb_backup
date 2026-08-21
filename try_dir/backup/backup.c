@@ -129,12 +129,17 @@ void checkFiles(usb_t *f, const uint32_t period, idxPool_t *p)
 			p->idxInUse[f->files[i].idx] = false;
 		}
 		if(modified_at == 0)
+		{
+			count--;
 			continue;
+		}
 		//make new copy
 		int64_t bytesWritten = copyFile(f->files[i].pathOriginal, f->files[i].pathUsb, f);
 		if(bytesWritten < 0)
 		{
 			fprintf(stderr, "failed to copy a file %lu\n", bytesWritten);
+			count--;
+			continue;
 		}
 	
 		//diff of the 2 same files
